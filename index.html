@@ -3,419 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Food Order Menu</title>
+    <title>Ezhil Restaurant - Order Food</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        h1 { color: #4CAF50; }
-        h2 { text-align: left; margin-left: 10%; color: #333; }
-        .menu-item { 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            margin: 10px auto; 
-            padding: 10px; 
-            border: 1px solid #ccc; 
-            width: 80%; 
-            max-width: 400px;
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        h1 {
+            font-family: 'Brush Script MT', cursive;
+            font-size: 40px;
+            color: #d35400;
+        }
+        h2 {
+            font-size: 22px;
+            color: #2c3e50;
+            margin-top: 20px;
+        }
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 80%;
+            margin: 10px auto;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 20px;
             background: #f9f9f9;
+        }
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+        }
+        .quantity-controls button {
+            padding: 8px 15px;
+            font-size: 18px;
+            background-color: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin: 0 5px;
             border-radius: 5px;
         }
-        .menu-item span { flex: 1; text-align: left; padding-left: 10px; }
-        .qty-container { display: flex; align-items: center; }
-        .qty { margin: 0 15px; font-size: 18px; width: 30px; text-align: center; }
-        .btn { padding: 5px 15px; font-size: 16px; cursor: pointer; border: 1px solid #ccc; background: white; }
-        .order-btn { 
-            margin-top: 10px; 
-            padding: 10px 20px; 
-            font-size: 18px; 
-            background: green; 
-            color: white; 
-            border: none; 
+        .quantity-controls span {
+            width: 30px;
+            display: inline-block;
+            text-align: center;
+            font-size: 18px;
+        }
+        #total {
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        input {
+            padding: 10px;
+            width: 250px;
+            margin-top: 10px;
+            font-size: 18px;
+            text-align: center;
+        }
+        .error {
+            color: red;
+            font-size: 16px;
+            display: none;
+        }
+        .order-button {
+            background-color: green;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            font-size: 20px;
+            margin-top: 20px;
             cursor: pointer;
             border-radius: 5px;
         }
-        #total-bill { font-size: 20px; margin-top: 15px; font-weight: bold; }
-        .room-input { margin-top: 10px; }
     </style>
-    <script>
-        let prices = {tea: 15, coffee: 20, milk: 15, boost: 20, horlicks: 20, blacktea: 15, blackcoffee: 20, lemontea: 20, idly(2pcs): 25, dosa: 40, eggdosa: 50, podidosa: 50, oniondosa: 50, onionuttapam: 50, parotta(2pcs): 40, chillyparotta: 120, kuthuparotta: 120, eggparotta: 60, onionpakoda: 80, gobi65: 65, breadomlette: 50, masalaomlette: 20, plainomlette: 20, onesideomlette: 20, chicken65: 150, chickenpepperdry: 150, chickenpepperfry: 150, chillychicken: 150, vegfriedrice: 100, eggfriedrice: 120, chickenfriedrice: 120, vegnoodlesrice: 100, eggnoodlesrice: 120, chickennoodlesrice: 120};
+</head>
+<body>
 
-        function updateOrder(item, action) {
-            let qtyElem = document.getElementById(item);
-            let qty = parseInt(qtyElem.innerText);
-            qty = action === 'add' ? qty + 1 : Math.max(0, qty - 1);
-            qtyElem.innerText = qty;
-            updateTotal();
+    <h1>Ezhil Restaurant</h1>
+
+    <h2>Beverages:</h2>
+    <div class="menu-item">
+        <span>Milk - ₹15</span>
+        <div class="quantity-controls">
+            <button onclick="updateQuantity('milk', -1)">-</button>
+            <span id="milk-qty">0</span>
+            <button onclick="updateQuantity('milk', 1)">+</button>
+        </div>
+    </div>
+
+    <h2>Dinner:</h2>
+    <div class="menu-item">
+        <span>Idly 2pcs - ₹25</span>
+        <div class="quantity-controls">
+            <button onclick="updateQuantity('idly', -1)">-</button>
+            <span id="idly-qty">0</span>
+            <button onclick="updateQuantity('idly', 1)">+</button>
+        </div>
+    </div>
+
+    <h2>Starter:</h2>
+    <div class="menu-item">
+        <span>Chilly Chicken - ₹150</span>
+        <div class="quantity-controls">
+            <button onclick="updateQuantity('chicken', -1)">-</button>
+            <span id="chicken-qty">0</span>
+            <button onclick="updateQuantity('chicken', 1)">+</button>
+        </div>
+    </div>
+
+    <h2>Rice:</h2>
+    <div class="menu-item">
+        <span>Egg Fried Rice - ₹120</span>
+        <div class="quantity-controls">
+            <button onclick="updateQuantity('eggFriedRice', -1)">-</button>
+            <span id="eggFriedRice-qty">0</span>
+            <button onclick="updateQuantity('eggFriedRice', 1)">+</button>
+        </div>
+    </div>
+
+    <div class="menu-item">
+        <span>Chicken Fried Rice - ₹120</span>
+        <div class="quantity-controls">
+            <button onclick="updateQuantity('chickenFriedRice', -1)">-</button>
+            <span id="chickenFriedRice-qty">0</span>
+            <button onclick="updateQuantity('chickenFriedRice', 1)">+</button>
+        </div>
+    </div>
+
+    <div id="total">Total Bill: ₹0</div>
+
+    <input type="number" id="roomNo" placeholder="Enter Room No." oninput="validateRoom()">
+    <div class="error" id="roomError">Invalid Room No.! (Only 201, 202, 203 allowed)</div>
+
+    <input type="text" id="block" placeholder="Enter Block" oninput="validateBlock()">
+    <div class="error" id="blockError">Invalid Block! (Only A, B, C allowed)</div>
+
+    <button class="order-button" onclick="placeOrder()">Order Now</button>
+
+    <script>
+        let prices = { milk: 15, idly: 25, chicken: 150, eggFriedRice: 120, chickenFriedRice: 120 };
+        let quantities = { milk: 0, idly: 0, chicken: 0, eggFriedRice: 0, chickenFriedRice: 0 };
+
+        function updateQuantity(item, change) {
+            if (quantities[item] + change >= 0) {
+                quantities[item] += change;
+                document.getElementById(item + '-qty').innerText = quantities[item];
+                updateTotal();
+            }
         }
 
         function updateTotal() {
-            let total = 0;
-            Object.keys(prices).forEach(item => {
-                let qty = parseInt(document.getElementById(item).innerText);
-                total += qty * prices[item];
-            });
-            document.getElementById("total-bill").innerText = "Total Bill: ₹" + total;
+            let total = Object.keys(quantities).reduce((sum, item) => sum + (quantities[item] * prices[item]), 0);
+            document.getElementById("total").innerText = "Total Bill: ₹" + total;
         }
 
-        function sendOrder() {
-            let roomNo = document.getElementById("room-no").value;
-            let block = document.getElementById("block").value;
-            let validRooms = ["201", "202", "203", "204"];
+        function validateRoom() {
+            let roomNo = document.getElementById("roomNo").value;
+            let validRooms = ["201", "202", "203"];
+            document.getElementById("roomError").style.display = validRooms.includes(roomNo) ? "none" : "block";
+        }
+
+        function validateBlock() {
+            let block = document.getElementById("block").value.toUpperCase();
+            let validBlocks = ["A", "B", "C"];
+            document.getElementById("blockError").style.display = validBlocks.includes(block) ? "none" : "block";
+        }
+
+        function placeOrder() {
+            let roomNo = document.getElementById("roomNo").value;
+            let block = document.getElementById("block").value.toUpperCase();
+            let validRooms = ["201", "202", "203"];
             let validBlocks = ["A", "B", "C"];
 
-            if (!roomNo || !block) {
-                alert("Please enter Room No. and Block.");
-                return;
-            }
-            if (!validRooms.includes(roomNo) || !validBlocks.includes(block)) {
-                alert("Wrong Room No. or Wrong Block Details.");
+            if (!validRooms.includes(roomNo)) {
+                alert("Please enter a valid Room No. (201, 202, 203)");
                 return;
             }
 
-            let items = document.querySelectorAll(".menu-item");
-            let orderText = `New Order from Ezhil Restaurant:\n\nRoom No: ${roomNo}, Block: ${block}\n\n`;
-            let total = 0;
-
-            items.forEach(item => {
-                let qty = parseInt(item.querySelector(".qty").innerText);
-                if (qty > 0) {
-                    let name = item.dataset.name;
-                    let price = prices[item.dataset.id] * qty;
-                    orderText += `${name}: ${qty} (₹${price})\n\n`;
-                    total += price;
-                }
-            });
-
-            if (total === 0) {
-                alert("Please select at least one item.");
+            if (!validBlocks.includes(block)) {
+                alert("Please enter a valid Block (A, B, C)");
                 return;
             }
 
-            orderText += `Total Bill: ₹${total}`;
-            let phone = "+919876543210";
-            let url = `https://wa.me/${phone}?text=${encodeURIComponent(orderText)}`;
-            window.open(url, "_blank");
+            let orderSummary = Object.keys(quantities)
+                .filter(item => quantities[item] > 0)
+                .map(item => `${capitalizeItem(item)} ${quantities[item]}`)
+                .join("\n");
+
+            let totalBill = Object.keys(quantities).reduce((sum, item) => sum + (quantities[item] * prices[item]), 0);
+
+            let message = `Order details:\n${orderSummary}\n\n*Total Bill: ₹${totalBill}*\n\nRoom No: ${roomNo}\nBlock: ${block}`;
+
+            let whatsappURL = `https://api.whatsapp.com/send?phone=919074844341&text=${encodeURIComponent(message)}`;
+            window.open(whatsappURL, "_blank");
+        }
+
+        function capitalizeItem(item) {
+            return item.charAt(0).toUpperCase() + item.slice(1).replace(/([A-Z])/g, ' $1').trim();
         }
     </script>
-</head>
-<body>
-    <h1>Ezhil Restaurant</h1>  
-<h2>Beverages</h2>
 
-        <div class="menu-item" data-name="Tea" data-id="tea">
-            <span>Tea (₹15)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('tea', 'subtract')">-</button>
-                <span class="qty" id="tea">0</span>
-                <button class="btn" onclick="updateOrder('tea', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Coffee" data-id="coffee">
-            <span>Coffee (₹20)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('coffee', 'subtract')">-</button>
-                <span class="qty" id="coffee">0</span>
-                <button class="btn" onclick="updateOrder('coffee', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Milk" data-id="milk">
-            <span>Milk (₹15)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('milk', 'subtract')">-</button>
-                <span class="qty" id="milk">0</span>
-                <button class="btn" onclick="updateOrder('milk', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Boost" data-id="boost">
-            <span>Boost (₹20)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('boost', 'subtract')">-</button>
-                <span class="qty" id="boost">0</span>
-                <button class="btn" onclick="updateOrder('boost', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Horlicks" data-id="horlicks">
-            <span>Horlicks (₹20)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('horlicks', 'subtract')">-</button>
-                <span class="qty" id="horlicks">0</span>
-                <button class="btn" onclick="updateOrder('horlicks', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Black Tea" data-id="blacktea">
-            <span>Black Tea (₹15)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('blacktea', 'subtract')">-</button>
-                <span class="qty" id="blacktea">0</span>
-                <button class="btn" onclick="updateOrder('blacktea', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Black Coffee" data-id="blackcoffee">
-            <span>Black Coffee (₹20)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('blackcoffee', 'subtract')">-</button>
-                <span class="qty" id="blackcoffee">0</span>
-                <button class="btn" onclick="updateOrder('blackcoffee', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Lemon Tea" data-id="lemontea">
-            <span>Lemon Tea (₹20)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('lemontea', 'subtract')">-</button>
-                <span class="qty" id="lemontea">0</span>
-                <button class="btn" onclick="updateOrder('lemontea', 'add')">+</button>
-            </div>
-        </div>
-        <h2>Dinner</h2>
-
-        <div class="menu-item" data-name="Idly (2pcs)" data-id="idly(2pcs)">
-            <span>Idly (2pcs) (₹25)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('idly(2pcs)', 'subtract')">-</button>
-                <span class="qty" id="idly(2pcs)">0</span>
-                <button class="btn" onclick="updateOrder('idly(2pcs)', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Dosa" data-id="dosa">
-            <span>Dosa (₹40)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('dosa', 'subtract')">-</button>
-                <span class="qty" id="dosa">0</span>
-                <button class="btn" onclick="updateOrder('dosa', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Egg Dosa" data-id="eggdosa">
-            <span>Egg Dosa (₹50)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('eggdosa', 'subtract')">-</button>
-                <span class="qty" id="eggdosa">0</span>
-                <button class="btn" onclick="updateOrder('eggdosa', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Podi Dosa" data-id="podidosa">
-            <span>Podi Dosa (₹50)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('podidosa', 'subtract')">-</button>
-                <span class="qty" id="podidosa">0</span>
-                <button class="btn" onclick="updateOrder('podidosa', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Onion Dosa" data-id="oniondosa">
-            <span>Onion Dosa (₹50)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('oniondosa', 'subtract')">-</button>
-                <span class="qty" id="oniondosa">0</span>
-                <button class="btn" onclick="updateOrder('oniondosa', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Onion Uttapam" data-id="onionuttapam">
-            <span>Onion Uttapam (₹50)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('onionuttapam', 'subtract')">-</button>
-                <span class="qty" id="onionuttapam">0</span>
-                <button class="btn" onclick="updateOrder('onionuttapam', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Parotta (2pcs)" data-id="parotta(2pcs)">
-            <span>Parotta (2pcs) (₹40)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('parotta(2pcs)', 'subtract')">-</button>
-                <span class="qty" id="parotta(2pcs)">0</span>
-                <button class="btn" onclick="updateOrder('parotta(2pcs)', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Chilly Parotta" data-id="chillyparotta">
-            <span>Chilly Parotta (₹120)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('chillyparotta', 'subtract')">-</button>
-                <span class="qty" id="chillyparotta">0</span>
-                <button class="btn" onclick="updateOrder('chillyparotta', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Kuthu Parotta" data-id="kuthuparotta">
-            <span>Kuthu Parotta (₹120)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('kuthuparotta', 'subtract')">-</button>
-                <span class="qty" id="kuthuparotta">0</span>
-                <button class="btn" onclick="updateOrder('kuthuparotta', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Egg Parotta" data-id="eggparotta">
-            <span>Egg Parotta (₹60)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('eggparotta', 'subtract')">-</button>
-                <span class="qty" id="eggparotta">0</span>
-                <button class="btn" onclick="updateOrder('eggparotta', 'add')">+</button>
-            </div>
-        </div>
-        <h2>Starter</h2>
-
-        <div class="menu-item" data-name="Onion Pakoda" data-id="onionpakoda">
-            <span>Onion Pakoda (₹80)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('onionpakoda', 'subtract')">-</button>
-                <span class="qty" id="onionpakoda">0</span>
-                <button class="btn" onclick="updateOrder('onionpakoda', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Gobi 65" data-id="gobi65">
-            <span>Gobi 65 (₹65)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('gobi65', 'subtract')">-</button>
-                <span class="qty" id="gobi65">0</span>
-                <button class="btn" onclick="updateOrder('gobi65', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Bread Omlette" data-id="breadomlette">
-            <span>Bread Omlette (₹50)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('breadomlette', 'subtract')">-</button>
-                <span class="qty" id="breadomlette">0</span>
-                <button class="btn" onclick="updateOrder('breadomlette', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Masala Omlette" data-id="masalaomlette">
-            <span>Masala Omlette (₹20)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('masalaomlette', 'subtract')">-</button>
-                <span class="qty" id="masalaomlette">0</span>
-                <button class="btn" onclick="updateOrder('masalaomlette', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Plain Omlette" data-id="plainomlette">
-            <span>Plain Omlette (₹20)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('plainomlette', 'subtract')">-</button>
-                <span class="qty" id="plainomlette">0</span>
-                <button class="btn" onclick="updateOrder('plainomlette', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="One Side Omlette" data-id="onesideomlette">
-            <span>One Side Omlette (₹20)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('onesideomlette', 'subtract')">-</button>
-                <span class="qty" id="onesideomlette">0</span>
-                <button class="btn" onclick="updateOrder('onesideomlette', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Chicken 65" data-id="chicken65">
-            <span>Chicken 65 (₹150)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('chicken65', 'subtract')">-</button>
-                <span class="qty" id="chicken65">0</span>
-                <button class="btn" onclick="updateOrder('chicken65', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Chicken Pepper Dry" data-id="chickenpepperdry">
-            <span>Chicken Pepper Dry (₹150)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('chickenpepperdry', 'subtract')">-</button>
-                <span class="qty" id="chickenpepperdry">0</span>
-                <button class="btn" onclick="updateOrder('chickenpepperdry', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Chicken Pepper Fry" data-id="chickenpepperfry">
-            <span>Chicken Pepper Fry (₹150)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('chickenpepperfry', 'subtract')">-</button>
-                <span class="qty" id="chickenpepperfry">0</span>
-                <button class="btn" onclick="updateOrder('chickenpepperfry', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Chilly Chicken" data-id="chillychicken">
-            <span>Chilly Chicken (₹150)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('chillychicken', 'subtract')">-</button>
-                <span class="qty" id="chillychicken">0</span>
-                <button class="btn" onclick="updateOrder('chillychicken', 'add')">+</button>
-            </div>
-        </div>
-        <h2>Rice</h2>
-
-        <div class="menu-item" data-name="Veg Fried Rice" data-id="vegfriedrice">
-            <span>Veg Fried Rice (₹100)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('vegfriedrice', 'subtract')">-</button>
-                <span class="qty" id="vegfriedrice">0</span>
-                <button class="btn" onclick="updateOrder('vegfriedrice', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Egg Fried Rice" data-id="eggfriedrice">
-            <span>Egg Fried Rice (₹120)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('eggfriedrice', 'subtract')">-</button>
-                <span class="qty" id="eggfriedrice">0</span>
-                <button class="btn" onclick="updateOrder('eggfriedrice', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Chicken Fried Rice" data-id="chickenfriedrice">
-            <span>Chicken Fried Rice (₹120)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('chickenfriedrice', 'subtract')">-</button>
-                <span class="qty" id="chickenfriedrice">0</span>
-                <button class="btn" onclick="updateOrder('chickenfriedrice', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Veg Noodles Rice" data-id="vegnoodlesrice">
-            <span>Veg Noodles Rice (₹100)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('vegnoodlesrice', 'subtract')">-</button>
-                <span class="qty" id="vegnoodlesrice">0</span>
-                <button class="btn" onclick="updateOrder('vegnoodlesrice', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Egg Noodles Rice" data-id="eggnoodlesrice">
-            <span>Egg Noodles Rice (₹120)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('eggnoodlesrice', 'subtract')">-</button>
-                <span class="qty" id="eggnoodlesrice">0</span>
-                <button class="btn" onclick="updateOrder('eggnoodlesrice', 'add')">+</button>
-            </div>
-        </div>
-        
-        <div class="menu-item" data-name="Chicken Noodles Rice" data-id="chickennoodlesrice">
-            <span>Chicken Noodles Rice (₹120)</span>
-            <div class="qty-container">
-                <button class="btn" onclick="updateOrder('chickennoodlesrice', 'subtract')">-</button>
-                <span class="qty" id="chickennoodlesrice">0</span>
-                <button class="btn" onclick="updateOrder('chickennoodlesrice', 'add')">+</button>
-            </div>
-        </div>
-        
-    <p id="total-bill">Total Bill: ₹0</p>
-    <div class="room-input">
-        <label>Room No.: <input type="text" id="room-no" placeholder="201, 202, 203, 204"></label>
-        <label>Block: <input type="text" id="block" placeholder="A, B, C"></label>
-    </div>
-    <button class="order-btn" onclick="sendOrder()">Order Now</button>
 </body>
 </html>

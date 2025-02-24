@@ -5,207 +5,218 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ezhil Restaurant - Order Food</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 20px;
-        }
-        h1 {
-            font-family: 'Brush Script MT', cursive;
-            font-size: 40px;
-            color: #d35400;
-        }
-        h2 {
-            font-size: 22px;
-            color: #2c3e50;
-            margin-top: 20px;
-        }
-        .menu-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 80%;
-            margin: 10px auto;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 20px;
-            background: #f9f9f9;
-        }
-        .quantity-controls {
-            display: flex;
-            align-items: center;
-        }
-        .quantity-controls button {
-            padding: 8px 15px;
-            font-size: 18px;
-            background-color: red;
-            color: white;
-            border: none;
-            cursor: pointer;
-            margin: 0 5px;
-            border-radius: 5px;
-        }
-        .quantity-controls span {
-            width: 30px;
-            display: inline-block;
-            text-align: center;
-            font-size: 18px;
-        }
-        #total {
-            font-size: 22px;
-            font-weight: bold;
-            margin-top: 20px;
-        }
-        input {
-            padding: 10px;
-            width: 250px;
-            margin-top: 10px;
-            font-size: 18px;
-            text-align: center;
-        }
-        .error {
-            color: red;
-            font-size: 16px;
-            display: none;
-        }
-        .order-button {
-            background-color: green;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            font-size: 20px;
-            margin-top: 20px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+        h1 { font-family: 'Brush Script MT', cursive; font-size: 40px; color: #d35400; }
+        .category-button { display: block; width: 80%; margin: 10px auto; padding: 15px; font-size: 22px; background-color: #3498db; color: white; border: none; cursor: pointer; border-radius: 5px; }
+        .menu-section { display: none; }
+        .menu-item { display: flex; justify-content: space-between; align-items: center; width: 80%; margin: 10px auto; padding: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 20px; background: #f9f9f9; }
+        .quantity-controls { display: flex; align-items: center; }
+        .quantity-controls button { padding: 8px 15px; font-size: 18px; background-color: red; color: white; border: none; cursor: pointer; margin: 0 5px; border-radius: 5px; }
+        .quantity-controls span { width: 30px; display: inline-block; text-align: center; font-size: 18px; }
+        #total { font-size: 22px; font-weight: bold; margin-top: 20px; }
+        .order-button { background-color: green; color: white; padding: 12px 20px; border: none; font-size: 20px; margin-top: 20px; cursor: pointer; border-radius: 5px; }
+        .error-message { color: red; font-size: 18px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <h1>Ezhil Restaurant</h1>
 
-    <h2>Beverages:</h2>
-    <div class="menu-item">
-        <span>Milk - ₹15</span>
+    <button class="category-button" onclick="showCategory('beverages')">Beverages</button>
+    <button class="category-button" onclick="showCategory('breakfast')">Breakfast</button>
+    <button class="category-button" onclick="showCategory('lunch')">Lunch</button>
+    <button class="category-button" onclick="showCategory('dinner')">Dinner</button>
+
+    <div id="error-message" class="error-message"></div>
+
+    <div id="beverages" class="menu-section">
+        <h2>Beverages:</h2>
+        <div class="menu-item">
+            <span>Milk - ₹15</span>
+            <div class="quantity-controls">
+                <button onclick="updateQuantity('Milk', -1)">-</button>
+                <span id="Milk-qty">0</span>
+                <button onclick="updateQuantity('Milk', 1)">+</button>
+            </div>
+        </div>
+<div class="menu-item">
+        <span>Coffee - ₹20</span>
         <div class="quantity-controls">
-            <button onclick="updateQuantity('milk', -1)">-</button>
-            <span id="milk-qty">0</span>
-            <button onclick="updateQuantity('milk', 1)">+</button>
+            <button onclick="updateQuantity('Coffee', -1)">-</button>
+            <span id="Coffee-qty">0</span>
+            <button onclick="updateQuantity('Coffee', 1)">+</button>
+        </div>
+    </div>
+<div class="menu-item">
+        <span>Tea - ₹15</span>
+        <div class="quantity-controls">
+            <button onclick="updateQuantity('Tea', -1)">-</button>
+            <span id="Tea-qty">0</span>
+            <button onclick="updateQuantity('Tea', 1)">+</button>
+        </div>
+    </div>
+</div>
+
+    <div id="breakfast" class="menu-section">
+        <h2>Breakfast:</h2>
+        <div class="menu-item">
+            <span>Idly 2pcs - ₹25</span>
+            <div class="quantity-controls">
+                <button onclick="updateQuantity('idly', -1)">-</button>
+                <span id="idly-qty">0</span>
+                <button onclick="updateQuantity('idly', 1)">+</button>
+            </div>
         </div>
     </div>
 
-    <h2>Dinner:</h2>
-    <div class="menu-item">
-        <span>Idly 2pcs - ₹25</span>
-        <div class="quantity-controls">
-            <button onclick="updateQuantity('idly', -1)">-</button>
-            <span id="idly-qty">0</span>
-            <button onclick="updateQuantity('idly', 1)">+</button>
+    <div id="lunch" class="menu-section">
+        <h2>Lunch:</h2>
+        <div class="menu-item">
+            <span>Egg Fried Rice - ₹120</span>
+            <div class="quantity-controls">
+                <button onclick="updateQuantity('eggFriedRice', -1)">-</button>
+                <span id="eggFriedRice-qty">0</span>
+                <button onclick="updateQuantity('eggFriedRice', 1)">+</button>
+            </div>
         </div>
     </div>
 
-    <h2>Starter:</h2>
-    <div class="menu-item">
-        <span>Chilly Chicken - ₹150</span>
-        <div class="quantity-controls">
-            <button onclick="updateQuantity('chicken', -1)">-</button>
-            <span id="chicken-qty">0</span>
-            <button onclick="updateQuantity('chicken', 1)">+</button>
+    <div id="dinner" class="menu-section">
+        <h2>Dinner:</h2>
+        <div class="menu-item">
+            <span>Chilly Chicken - ₹150</span>
+            <div class="quantity-controls">
+                <button onclick="updateQuantity('ChillyChicken', -1)">-</button>
+                <span id="ChillyChicken-qty">0</span>
+                <button onclick="updateQuantity('ChillyChicken', 1)">+</button>
+            </div>
         </div>
-    </div>
 
-    <h2>Rice:</h2>
-    <div class="menu-item">
-        <span>Egg Fried Rice - ₹120</span>
+        <div class="menu-item">
+        <span>Chicken 65 - ₹180</span>
         <div class="quantity-controls">
-            <button onclick="updateQuantity('eggFriedRice', -1)">-</button>
-            <span id="eggFriedRice-qty">0</span>
-            <button onclick="updateQuantity('eggFriedRice', 1)">+</button>
+            <button onclick="updateQuantity('chicken65', -1)">-</button>
+            <span id="chicken65-qty">0</span>
+            <button onclick="updateQuantity('chicken65', 1)">+</button>
         </div>
     </div>
-
-    <div class="menu-item">
-        <span>Chicken Fried Rice - ₹120</span>
-        <div class="quantity-controls">
-            <button onclick="updateQuantity('chickenFriedRice', -1)">-</button>
-            <span id="chickenFriedRice-qty">0</span>
-            <button onclick="updateQuantity('chickenFriedRice', 1)">+</button>
-        </div>
-    </div>
+</div>
 
     <div id="total">Total Bill: ₹0</div>
 
-    <input type="number" id="roomNo" placeholder="Enter Room No." oninput="validateRoom()">
-    <div class="error" id="roomError">Invalid Room No.! (Only 201, 202, 203 allowed)</div>
+    <h3>Select Block:</h3>
+    <select id="block" onchange="updateRooms()">
+        <option value="">Select Block</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+    </select>
 
-    <input type="text" id="block" placeholder="Enter Block" oninput="validateBlock()">
-    <div class="error" id="blockError">Invalid Block! (Only A, B, C allowed)</div>
+    <h3>Select Room:</h3>
+    <select id="room">
+        <option value="">Select Room</option>
+    </select>
 
-    <button class="order-button" onclick="placeOrder()">Order Now</button>
+<br><br>
 
-    <script>
-        let prices = { milk: 15, idly: 25, chicken: 150, eggFriedRice: 120, chickenFriedRice: 120 };
-        let quantities = { milk: 0, idly: 0, chicken: 0, eggFriedRice: 0, chickenFriedRice: 0 };
+<button class="order-button" onclick="placeOrder()">Order Now</button>
 
-        function updateQuantity(item, change) {
-            if (quantities[item] + change >= 0) {
-                quantities[item] += change;
-                document.getElementById(item + '-qty').innerText = quantities[item];
-                updateTotal();
+<script>
+    let prices = { Milk: 15, Coffee: 20, Tea: 15, idly: 25, ChillyChicken: 150, eggFriedRice: 120, dosa: 40, chicken65: 150 };
+    let quantities = { Milk: 0, Coffee: 0, Tea: 0, idly: 0, ChillyChicken: 0, eggFriedRice: 0, dosa: 0, chicken65: 0 };
+
+    function showCategory(category) {
+        let now = new Date();
+        let hour = now.getHours();
+        let minute = now.getMinutes();
+        let currentTime = hour * 60 + minute;
+
+        let availableTimes = {
+            beverages: { start: 390, end: 1290 }, // 6:30 AM - 9:30 PM
+            breakfast: { start: 450, end: 630 }, // 7:30 AM - 10:30 AM
+            lunch: { start: 750, end: 900 },     // 12:30 PM - 3:00 PM
+            dinner: { start: 1080, end: 1410 }   // 6:00 PM - 11:30 PM
+        };
+
+        document.getElementById("error-message").innerText = "";
+        
+        if (availableTimes[category]) {
+            let { start, end } = availableTimes[category];
+            if (currentTime < start || currentTime > end) {
+                document.getElementById("error-message").innerText = 
+                    `${category.charAt(0).toUpperCase() + category.slice(1)} is not available now.`;
             }
         }
 
-        function updateTotal() {
-            let total = Object.keys(quantities).reduce((sum, item) => sum + (quantities[item] * prices[item]), 0);
-            document.getElementById("total").innerText = "Total Bill: ₹" + total;
+        // Hide all categories
+        document.querySelectorAll(".menu-section").forEach(section => section.style.display = "none");
+        
+        // Show the selected category
+        document.getElementById(category).style.display = "block";
+    }
+
+    function updateQuantity(item, change) {
+        if (quantities[item] + change >= 0) {
+            quantities[item] += change;
+            document.getElementById(item + '-qty').innerText = quantities[item];
+            updateTotal();
+        }
+    }
+
+    function updateTotal() {
+        let total = Object.keys(quantities).reduce((sum, item) => sum + (quantities[item] * prices[item]), 0);
+        document.getElementById("total").innerText = "Total Bill: ₹" + total;
+    }
+
+    function updateRooms() {
+        let block = document.getElementById("block").value;
+        let roomSelect = document.getElementById("room");
+        let rooms = {
+            A: ["101", "102", "103", "201", "202", "203", "204", "205", "301", "302", "303"],
+            B: ["101", "102", "103", "201", "202", "555", "301", "302", "303", "333"],
+            C: ["222", "444", "777", "501", "504", "503", "502", "505", "999"]
+        };
+        roomSelect.innerHTML = `<option value="">Select Room</option>`;
+        rooms[block]?.forEach(room => {
+            roomSelect.innerHTML += `<option value="${room}">${room}</option>`;
+        });
+    }
+
+    function placeOrder() {
+        let block = document.getElementById("block").value;
+        let room = document.getElementById("room").value;
+
+        // Show warning if block or room is not selected
+        if (!block || !room) {
+            alert("Plz Select Block/Room");
+            return;
         }
 
-        function validateRoom() {
-            let roomNo = document.getElementById("roomNo").value;
-            let validRooms = ["201", "202", "203"];
-            document.getElementById("roomError").style.display = validRooms.includes(roomNo) ? "none" : "block";
-        }
+        let orderDetails = "";
+        let total = 0;
 
-        function validateBlock() {
-            let block = document.getElementById("block").value.toUpperCase();
-            let validBlocks = ["A", "B", "C"];
-            document.getElementById("blockError").style.display = validBlocks.includes(block) ? "none" : "block";
-        }
-
-        function placeOrder() {
-            let roomNo = document.getElementById("roomNo").value;
-            let block = document.getElementById("block").value.toUpperCase();
-            let validRooms = ["201", "202", "203"];
-            let validBlocks = ["A", "B", "C"];
-
-            if (!validRooms.includes(roomNo)) {
-                alert("Please enter a valid Room No. (201, 202, 203)");
-                return;
+        for (let item in quantities) {
+            if (quantities[item] > 0) {
+                orderDetails += `${item} - ${quantities[item]}\n`;
+                total += quantities[item] * prices[item];
             }
-
-            if (!validBlocks.includes(block)) {
-                alert("Please enter a valid Block (A, B, C)");
-                return;
-            }
-
-            let orderSummary = Object.keys(quantities)
-                .filter(item => quantities[item] > 0)
-                .map(item => `${capitalizeItem(item)} ${quantities[item]}`)
-                .join("\n");
-
-            let totalBill = Object.keys(quantities).reduce((sum, item) => sum + (quantities[item] * prices[item]), 0);
-
-            let message = `Order details:\n${orderSummary}\n\n*Total Bill: ₹${totalBill}*\n\nRoom No: ${roomNo}\nBlock: ${block}`;
-
-            let whatsappURL = `https://api.whatsapp.com/send?phone=919074844341&text=${encodeURIComponent(message)}`;
-            window.open(whatsappURL, "_blank");
         }
 
-        function capitalizeItem(item) {
-            return item.charAt(0).toUpperCase() + item.slice(1).replace(/([A-Z])/g, ' $1').trim();
+        // Show warning if no items are selected
+        if (!orderDetails) {
+            alert("Please select at least one item to order.");
+            return;
         }
-    </script>
+
+        // Create WhatsApp message
+let message = `*Room No:* ${room} (${block})\n\n*Order details:*\n\n${orderDetails}\nTotal Bill: ₹${total}\n\n*Please Verify Order Details, Room No. & Block Before Sending Message*`;
+    let encodedMessage = encodeURIComponent(message);
+    let whatsappURL = `https://wa.me/919074844341?text=${encodedMessage}`;
+
+    // Open WhatsApp
+    window.open(whatsappURL, "_blank");
+}
+</script>
 
 </body>
 </html>

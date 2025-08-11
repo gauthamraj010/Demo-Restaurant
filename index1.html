@@ -591,20 +591,6 @@
         document.getElementById("total").innerText = "Total Bill: ₹" + total;
     }
 
-    function updateRooms() {
-        let block = document.getElementById("block").value;
-        let roomSelect = document.getElementById("room");
-        let rooms = {
-            A: ["101", "102", "103", "201", "202", "203", "204", "205", "301", "302", "303"],
-            B: ["101", "102", "103", "201", "202", "555", "301", "302", "303", "333"],
-            C: ["222", "444", "777", "501", "504", "503", "502", "505", "999"]
-        };
-        roomSelect.innerHTML = `<option value="">Select Room</option>`;
-        rooms[block]?.forEach(room => {
-            roomSelect.innerHTML += `<option value="${room}">${room}</option>`;
-        });
-    }
-
     function placeOrder() {
         let block = document.getElementById("block").value;
         let room = document.getElementById("room").value;

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Restaurant - Order Food</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            margin: 20px; 
+            background-image: url('bg.jpeg');
+            background-size: cover; 
+            background-repeat: no-repeat; 
+            background-attachment: fixed; 
+        }
+        h1 { font-family: 'Brush Script MT', cursive; font-size: 40px; color: #ffffff; }
+        .category-button { display: block; width: 80%; margin: 10px auto; padding: 15px; font-size: 22px; background-color: #3498db; color: white; border: none; cursor: pointer; border-radius: 5px; }
+        .menu-section { display: none; }
+        .menu-item { display: flex; justify-content: space-between; align-items: center; width: 80%; margin: 10px auto; padding: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 20px; background: #f9f9f9; }
+        .quantity-controls { display: flex; align-items: center; }
+        .quantity-controls button { padding: 8px 15px; font-size: 18px; background-color: red; color: white; border: none; cursor: pointer; margin: 0 5px; border-radius: 5px; }
+        .quantity-controls span { width: 30px; display: inline-block; text-align: center; font-size: 18px; }
+        #total { 
+            font-size: 22px; 
+            font-weight: bold; 
+            margin-top: 20px; 
+            color: white;
+        }
+        .order-button { background-color: green; color: white; padding: 12px 20px; border: none; font-size: 20px; margin-top: 20px; cursor: pointer; border-radius: 5px; }
+        .error-message { color: red; font-size: 18px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>Demo Restaurant</h1>
+
+    <button class="category-button" onclick="showCategory('beverages')">Beverages</button>
+    <button class="category-button" onclick="showCategory('breakfast')">Breakfast</button>
+    <button class="category-button" onclick="showCategory('lunch')">Lunch</button>
+    <button class="category-button" onclick="showCategory('dinner')">Dinner</button>
+
+    <div id="error-message" class="error-message"></div>
+
+    <!-- Beverages Menu Section (unchanged) -->
+    <div id="beverages" class="menu-section">
+        <h2>Beverages:</h2>
+        <div class="menu-item">
+            <span>Milk - ₹15</span>
+            <div class="quantity-controls">
+                <button onclick="updateQuantity('milk', -1)">-</button>
+                <span id="milk-qty">0</span>
+                <button onclick="updateQuantity('milk', 1)">+</button>
+            </div>
+        </div>
+        <!-- Other beverage items remain unchanged -->
+    </div>
+
+    <!-- Other menu sections (breakfast, lunch, dinner) remain unchanged -->
+
+    <div id="total">Total Bill: ₹0</div>
+    <br><br>
+    <button class="order-button" onclick="placeOrder()">Order Now</button>
+
+    <script>
+        let prices = {  
+            milk: 15, 
+            coffee: 20, 
+            tea: 15, 
+            boost: 20, 
+            horlicks: 20, 
+            blackTea: 15, 
+            blackCoffee: 20, 
+            lemonTea: 20,
+            idly: 25,
+            DOSA: 40,
+            ONION_DOSA: 50,
+            EGG_DOSA: 50,
+            PODI_DOSA: 40,
+            UTTAPAM: 40,
+            ONION_UTTAPAM: 50,
+            POORI: 50,
+            PONGAL: 50,
+            VADA: 15,
+            OMLETTE: 20,
+            Idly: 25,  
+            dosa: 40,  
+            eggDosa: 50,  
+            posiDosa: 50,  
+            onionDosa: 50,  
+            uttapam: 30,  
+            onionUttapam: 50,  
+            chapathi: 50,  
+            parota: 40,  
+            omelette: 20,  
+            chicken65: 150,  
+            pepperChicken: 150,  
+            chettinadChicken: 180,  
+            onionPakoda: 80,  
+            breadOmelette: 50,  
+            gobi65: 80,  
+            vegFriedRice: 100,  
+            vegNoodles: 100,  
+            Meals: 120,  
+            EggFriedRice: 120,
+            eggNoodles: 120,  
+            chickenFriedRice: 120,  
+            chickenNoodles: 120  
+        };
+
+        let quantities = {  
+            milk: 0, 
+            coffee: 0, 
+            tea: 0, 
+            boost: 0, 
+            horlicks: 0, 
+            blackTea: 0, 
+            blackCoffee: 0, 
+            lemonTea: 0,
+            idly: 0,  
+            DOSA: 0,
+            ONION_DOSA: 0,
+            EGG_DOSA: 0,
+            PODI_DOSA: 0,
+            UTTAPAM: 0,
+            ONION_UTTAPAM: 0,
+            POORI: 0,
+            PONGAL: 0,
+            VADA: 0,
+            OMLETTE: 0,
+            Idly: 0,
+            dosa: 0,  
+            eggDosa: 0,  
+            posiDosa: 0,  
+            onionDosa: 0,  
+            uttapam: 0,  
+            onionUttapam: 0,  
+            chapathi: 0,  
+            parota: 0,  
+            omelette: 0,  
+            chicken65: 0,  
+            pepperChicken: 0,  
+            chettinadChicken: 0,  
+            onionPakoda: 0,  
+            breadOmelette: 0,  
+            gobi65: 0,  
+            vegFriedRice: 0,  
+            vegNoodles: 0,  
+            Meals: 0,  
+            EggFriedRice: 0,
+            eggNoodles: 0,  
+            chickenFriedRice: 0,  
+            chickenNoodles: 0  
+        };
+
+        function showCategory(category) {
+            let now = new Date();
+            let hour = now.getHours();
+            let minute = now.getMinutes();
+            let currentTime = hour * 60 + minute;
+
+            let availableTimes = {
+                beverages: { start: 390, end: 1290 }, // 6:30 AM - 9:30 PM
+                breakfast: { start: 450, end: 630 }, // 7:30 AM - 10:30 AM
+                lunch: { start: 750, end: 900 },     // 12:30 PM - 3:00 PM
+                dinner: { start: 1080, end: 1410 }   // 6:00 PM - 11:30 PM
+            };
+
+            document.getElementById("error-message").innerText = "";
+            
+            if (availableTimes[category]) {
+                let { start, end } = availableTimes[category];
+                if (currentTime < start || currentTime > end) {
+                    document.getElementById("error-message").innerText = 
+                        `${category.charAt(0).toUpperCase() + category.slice(1)} is not available now.`;
+                }
+            }
+
+            // Hide all categories
+            document.querySelectorAll(".menu-section").forEach(section => section.style.display = "none");
+            
+            // Show the selected category
+            document.getElementById(category).style.display = "block";
+        }
+
+        function updateQuantity(item, change) {
+            if (quantities[item] + change >= 0) {
+                quantities[item] += change;
+                document.getElementById(item + '-qty').innerText = quantities[item];
+                updateTotal();
+            }
+        }
+
+        function updateTotal() {
+            let total = Object.keys(quantities).reduce((sum, item) => sum + (quantities[item] * prices[item]), 0);
+            document.getElementById("total").innerText = "Total Bill: ₹" + total;
+        }
+
+        function placeOrder() {
+            let orderDetails = "";
+            let total = 0;
+
+            for (let item in quantities) {
+                if (quantities[item] > 0) {
+                    orderDetails += `${item} - ${quantities[item]}\n`;
+                    total += quantities[item] * prices[item];
+                }
+            }
+
+            if (!orderDetails) {
+                alert("Please select at least one item to order.");
+                return;
+            }
+
+            // WhatsApp message with hardcoded Delux Room
+            const message = `*Delux Room: 201*\n\n*Order Details:*\n${orderDetails}\n*Total Bill:* ₹${total}\n\n*Please verify details before sending.*`;
+            const whatsappURL = `https://wa.me/917051663700?text=${encodeURIComponent(message)}`;
+            window.open(whatsappURL, "_blank");
+        }
+    </script>
+</body>
+</html>

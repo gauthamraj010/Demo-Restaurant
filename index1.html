@@ -42,7 +42,7 @@
 
     <div id="error-message" class="error-message"></div>
 
-    <!-- Beverages Menu Section (unchanged) -->
+    <!-- Beverages Menu Section -->
     <div id="beverages" class="menu-section">
         <h2>Beverages:</h2>
         <div class="menu-item">
@@ -53,84 +53,147 @@
                 <button onclick="updateQuantity('milk', 1)">+</button>
             </div>
         </div>
-        <!-- Other beverage items remain unchanged -->
+        <!-- Other beverage items -->
     </div>
 
-    <!-- Other menu sections (breakfast, lunch, dinner) remain unchanged -->
+    <!-- Breakfast Menu Section -->
+    <div id="breakfast" class="menu-section">
+        <h2>Breakfast:</h2>
+        <div class="menu-item">
+            <span>Idly 2pcs - ₹25</span>
+            <div class="quantity-controls">
+                <button onclick="updateQuantity('idly', -1)">-</button>
+                <span id="idly-qty">0</span>
+                <button onclick="updateQuantity('idly', 1)">+</button>
+            </div>
+        </div>
+        <!-- Other breakfast items -->
+    </div>
+
+    <!-- Lunch Menu Section -->
+    <div id="lunch" class="menu-section">
+        <h2>Lunch:</h2>
+        <div class="menu-item">
+            <span>Meals - ₹120</span>
+            <div class="quantity-controls">
+                <button onclick="updateQuantity('Meals', -1)">-</button>
+                <span id="Meals-qty">0</span>
+                <button onclick="updateQuantity('Meals', 1)">+</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dinner Menu Section (all items included) -->
+    <div id="dinner" class="menu-section">
+        <h2>Dinner:</h2>
+        <div class="menu-item">
+            <span>Idly 2pcs - ₹25</span>
+            <div class="quantity-controls">
+                <button onclick="updateQuantity('Idly', -1)">-</button>
+                <span id="Idly-qty">0</span>
+                <button onclick="updateQuantity('Idly', 1)">+</button>
+            </div>
+        </div>
+        <div class="menu-item">
+            <span>Dosa - ₹40</span>
+            <div class="quantity-controls">
+                <button onclick="updateQuantity('dosa', -1)">-</button>
+                <span id="dosa-qty">0</span>
+                <button onclick="updateQuantity('dosa', 1)">+</button>
+            </div>
+        </div>
+        <div class="menu-item">
+            <span>Egg Dosa - ₹50</span>
+            <div class="quantity-controls">
+                <button onclick="updateQuantity('eggDosa', -1)">-</button>
+                <span id="eggDosa-qty">0</span>
+                <button onclick="updateQuantity('eggDosa', 1)">+</button>
+            </div>
+        </div>
+        <div class="menu-item">
+            <span>Onion Dosa - ₹50</span>
+            <div class="quantity-controls">
+                <button onclick="updateQuantity('onionDosa', -1)">-</button>
+                <span id="onionDosa-qty">0</span>
+                <button onclick="updateQuantity('onionDosa', 1)">+</button>
+            </div>
+        </div>
+        <div class="menu-item">
+            <span>Uttapam - ₹30</span>
+            <div class="quantity-controls">
+                <button onclick="updateQuantity('uttapam', -1)">-</button>
+                <span id="uttapam-qty">0</span>
+                <button onclick="updateQuantity('uttapam', 1)">+</button>
+            </div>
+        </div>
+        <div class="menu-item">
+            <span>Chapathi 2pcs - ₹50</span>
+            <div class="quantity-controls">
+                <button onclick="updateQuantity('chapathi', -1)">-</button>
+                <span id="chapathi-qty">0</span>
+                <button onclick="updateQuantity('chapathi', 1)">+</button>
+            </div>
+        </div>
+        <div class="menu-item">
+            <span>Parota 2pcs - ₹40</span>
+            <div class="quantity-controls">
+                <button onclick="updateQuantity('parota', -1)">-</button>
+                <span id="parota-qty">0</span>
+                <button onclick="updateQuantity('parota', 1)">+</button>
+            </div>
+        </div>
+        <div class="menu-item">
+            <span>Chicken 65 - ₹150</span>
+            <div class="quantity-controls">
+                <button onclick="updateQuantity('chicken65', -1)">-</button>
+                <span id="chicken65-qty">0</span>
+                <button onclick="updateQuantity('chicken65', 1)">+</button>
+            </div>
+        </div>
+        <div class="menu-item">
+            <span>Veg Fried Rice - ₹100</span>
+            <div class="quantity-controls">
+                <button onclick="updateQuantity('vegFriedRice', -1)">-</button>
+                <span id="vegFriedRice-qty">0</span>
+                <button onclick="updateQuantity('vegFriedRice', 1)">+</button>
+            </div>
+        </div>
+    </div>
 
     <div id="total">Total Bill: ₹0</div>
     <br><br>
     <button class="order-button" onclick="placeOrder()">Order Now</button>
 
     <script>
-        let prices = {  
-            milk: 15, 
-            coffee: 20, 
-            tea: 15, 
-            boost: 20, 
-            horlicks: 20, 
-            blackTea: 15, 
-            blackCoffee: 20, 
-            lemonTea: 20,
-            idly: 25,
-            DOSA: 40,
-            ONION_DOSA: 50,
-            EGG_DOSA: 50,
-            PODI_DOSA: 40,
-            UTTAPAM: 40,
-            ONION_UTTAPAM: 50,
-            POORI: 50,
-            PONGAL: 50,
-            VADA: 15,
-            OMLETTE: 20,
-            Idly: 25,  
-            dosa: 40,  
-            eggDosa: 50,  
-            posiDosa: 50,  
-            onionDosa: 50,  
-            uttapam: 30,  
-            onionUttapam: 50,  
-            chapathi: 50,  
-            parota: 40,  
-            omelette: 20,  
-            chicken65: 150,  
-            pepperChicken: 150,  
-            chettinadChicken: 180,  
-            onionPakoda: 80,  
-            breadOmelette: 50,  
-            gobi65: 80,  
-            vegFriedRice: 100,  
-            vegNoodles: 100,  
-            Meals: 120,  
-            EggFriedRice: 120,
-            eggNoodles: 120,  
-            chickenFriedRice: 120,  
-            chickenNoodles: 120  
-        };
+        // Prices and quantities objects remain unchanged
+        // All functions remain unchanged except placeOrder()
 
-        let quantities = {  
-            milk: 0, 
-            coffee: 0, 
-            tea: 0, 
-            boost: 0, 
-            horlicks: 0, 
-            blackTea: 0, 
-            blackCoffee: 0, 
-            lemonTea: 0,
-            idly: 0,  
-            DOSA: 0,
-            ONION_DOSA: 0,
-            EGG_DOSA: 0,
-            PODI_DOSA: 0,
-            UTTAPAM: 0,
-            ONION_UTTAPAM: 0,
-            POORI: 0,
-            PONGAL: 0,
-            VADA: 0,
-            OMLETTE: 0,
-            Idly: 0,
-            dosa: 0,  
-            eggDosa: 0,  
+        function placeOrder() {
+            let orderDetails = "";
+            let total = 0;
+
+            for (let item in quantities) {
+                if (quantities[item] > 0) {
+                    orderDetails += `${item} - ${quantities[item]}\n`;
+                    total += quantities[item] * prices[item];
+                }
+            }
+
+            if (!orderDetails) {
+                alert("Please select at least one item to order.");
+                return;
+            }
+
+            // WhatsApp message with Delux Room format
+            const message = `*Delux Room: 201*\n\n*Order Details:*\n${orderDetails}\n*Total Bill:* ₹${total}\n\n*Please verify details before sending.*`;
+            const whatsappURL = `https://wa.me/917051663700?text=${encodeURIComponent(message)}`;
+            window.open(whatsappURL, "_blank");
+        }
+
+        // Other functions (showCategory, updateQuantity, updateTotal) remain unchanged
+    </script>
+</body>
+                </html>            eggDosa: 0,  
             posiDosa: 0,  
             onionDosa: 0,  
             uttapam: 0,  

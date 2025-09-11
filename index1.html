@@ -19,20 +19,30 @@
         .menu-section { display: none; }
         .menu-item { display: flex; justify-content: space-between; align-items: center; width: 80%; margin: 10px auto; padding: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 20px; background: #f9f9f9; }
         .quantity-controls { display: flex; align-items: center; }
+        select {
+    background-color: white; /* Change dropdown background */
+    color: black;            /* Change dropdown text */
+    padding: 8px;
+    border-radius: 5px;
+    font-size: 16px;
+}
         .quantity-controls button { padding: 8px 15px; font-size: 18px; background-color: red; color: white; border: none; cursor: pointer; margin: 0 5px; border-radius: 5px; }
         .quantity-controls span { width: 30px; display: inline-block; text-align: center; font-size: 18px; }
-        #total { 
-    font-size: 22px; 
-    font-weight: bold; 
-    margin-top: 20px; 
-    color: white; /* makes it visible */
-}
+        #total { font-size: 22px; font-weight: bold; margin-top: 20px; color: white;}
         .order-button { background-color: green; color: white; padding: 12px 20px; border: none; font-size: 20px; margin-top: 20px; cursor: pointer; border-radius: 5px; }
         .error-message { color: red; font-size: 18px; margin-top: 10px; }
     </style>
 </head>
+    <div id="orderModal" style="display:none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background: rgba(0,0,0,0.5);">
+  <div style="background: #fff; margin: 10% auto; padding: 20px; border-radius: 10px; width: 80%; max-width: 350px; text-align:left;">
+    <h2>Order Summary</h2>
+    <div id="orderDetails"></div>
+    <div id="orderTotal"></div>
+    <button onclick="confirmOrder()" style="background-color:green;color:white;padding:10px 20px;border:none;border-radius:5px;margin-top:10px;width:100%;">Confirm Order</button>
+    <button onclick="document.getElementById('orderModal').style.display='none';" style="background-color:gray;color:white;padding:10px 20px;border:none;border-radius:5px;margin-top:10px;width:100%;">Cancel</button>
+  </div>
+    </div>
 <body>
-
     <h1>Demo Restaurant</h1>
 
     <button class="category-button" onclick="showCategory('beverages')">Beverages</button>
@@ -40,64 +50,158 @@
     <button class="category-button" onclick="showCategory('lunch')">Lunch</button>
     <button class="category-button" onclick="showCategory('dinner')">Dinner</button>
 
-    <div id="error-message" class="error-message"></div>
-
     <div id="beverages" class="menu-section">
         <h2>Beverages:</h2>
-  <div class="menu-item">
-    <span>Milk - ₹15</span>
-    <div class="quantity-controls">
-        <button onclick="updateQuantity('milk', -1)">-</button>
-        <span id="milk-qty">0</span>
-        <button onclick="updateQuantity('milk', 1)">+</button>
+        <div class="menu-list"></div>
     </div>
-</div>
-
-<div class="menu-item">
-    <span>Coffee - ₹20</span>
-    <div class="quantity-controls">
-        <button onclick="updateQuantity('coffee', -1)">-</button>
-        <span id="coffee-qty">0</span>
-        <button onclick="updateQuantity('coffee', 1)">+</button>
+    <div id="breakfast" class="menu-section">
+        <h2>Breakfast:</h2>
+        <div class="menu-list"></div>
     </div>
-</div>
-
-<div class="menu-item">
-    <span>Tea - ₹15</span>
-    <div class="quantity-controls">
-        <button onclick="updateQuantity('tea', -1)">-</button>
-        <span id="tea-qty">0</span>
-        <button onclick="updateQuantity('tea', 1)">+</button>
+    <div id="lunch" class="menu-section">
+        <h2>Lunch:</h2>
+        <div class="menu-list"></div>
     </div>
-</div>
-
-<div class="menu-item">
-    <span>Boost - ₹20</span>
-    <div class="quantity-controls">
-        <button onclick="updateQuantity('boost', -1)">-</button>
-        <span id="boost-qty">0</span>
-        <button onclick="updateQuantity('boost', 1)">+</button>
+    <div id="dinner" class="menu-section">
+        <h2>Dinner:</h2>
+        <div class="menu-list"></div>
     </div>
-</div>
+    <div id="total">Total Bill: ₹0</div>
+    <br><br>
+    <button class="order-button" onclick="placeOrder()">Order Now</button>
 
-<div class="menu-item">
-    <span>Horlicks - ₹20</span>
-    <div class="quantity-controls">
-        <button onclick="updateQuantity('horlicks', -1)">-</button>
-        <span id="horlicks-qty">0</span>
-        <button onclick="updateQuantity('horlicks', 1)">+</button>
-    </div>
-</div>
+<!-- Firebase SDK (compat for easy HTML integration) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+    // Paste your Firebase config here!
+    const firebaseConfig = {
+      apiKey: "AIzaSyCQ780suirYkoWnyiTElsulpPLep7jZOBs",
+      authDomain: "fir-restaurants-5a977.firebaseapp.com",
+      projectId: "fir-restaurants-5a977",
+      storageBucket: "fir-restaurants-5a977.firebasestorage.app",
+      messagingSenderId: "536510676521",
+      appId: "1:536510676521:web:6a9777efcd5b2508afa638",
+      measurementId: "G-5SSTY9BBYT"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-<div class="menu-item">
-    <span>Black Tea - ₹15</span>
-    <div class="quantity-controls">
-        <button onclick="updateQuantity('blackTea', -1)">-</button>
-        <span id="blackTea-qty">0</span>
-        <button onclick="updateQuantity('blackTea', 1)">+</button>
-    </div>
-</div>
+    // Globals for dynamic prices/quantities
+    let prices = {};
+    let quantities = {};
 
+    // Load menu items from Firestore and populate menu sections with quantity controls
+    function renderMenus(menuItems) {
+        const categories = ["beverages", "breakfast", "lunch", "dinner"];
+        // Clear and rebuild menu lists
+        categories.forEach(cat => {
+            const section = document.getElementById(cat).querySelector('.menu-list');
+            section.innerHTML = "";
+            // Find items for this category
+            let catItems = menuItems.filter(item => Array.isArray(item.categories) && item.categories.includes(cat));
+            catItems.forEach(item => {
+                let itemKey = item.name.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
+                prices[itemKey] = item.price;
+                if (!(itemKey in quantities)) quantities[itemKey] = 0;
+                // HTML for the menu item row
+                section.innerHTML += `
+                <div class="menu-item">
+                    <span>${item.name} - ₹${item.price}</span>
+                    <div class="quantity-controls">
+                        <button onclick="updateQuantity('${itemKey}', -1)">-</button>
+                        <span id="${itemKey}-qty">0</span>
+                        <button onclick="updateQuantity('${itemKey}', 1)">+</button>
+                    </div>
+                </div>`;
+            });
+        });
+    }
+
+    // Firestore Fetch
+    db.collection("menuItems").get().then(snap => {
+        let items = [];
+        snap.forEach(doc => items.push({id: doc.id, ...doc.data()}));
+        renderMenus(items);
+    });
+
+    function showCategory(category) {
+        let oldError = document.getElementById("error-message");
+        if (oldError) oldError.remove();
+
+        let now = new Date();
+        let hour = now.getHours();
+        let minute = now.getMinutes();
+        let currentTime = hour * 60 + minute;
+
+        let availableTimes = {
+            beverages: { start: 390, end: 1290 }, // 6:30 AM - 9:30 PM
+            breakfast: { start: 450, end: 630 },  // 7:30 AM - 10:30 AM
+            lunch: { start: 750, end: 900 },      // 12:30 PM - 3:00 PM
+            dinner: { start: 1080, end: 1410 }    // 6:00 PM - 11:30 PM
+        };
+
+        let button = document.querySelector(`button[onclick="showCategory('${category}')"]`);
+
+        if (availableTimes[category]) {
+            let { start, end } = availableTimes[category];
+            if (currentTime < start || currentTime > end) {
+                let errorDiv = document.createElement("div");
+                errorDiv.id = "error-message";
+                errorDiv.className = "error-message";
+                errorDiv.innerText = `${category.charAt(0).toUpperCase() + category.slice(1)} is not available now.`;
+                button.parentNode.insertBefore(errorDiv, button.nextSibling);
+                document.querySelectorAll(".menu-section").forEach(section => section.style.display = "none");
+                return;
+            }
+        }
+
+        document.querySelectorAll(".error-message").forEach(e => e.remove());
+        document.querySelectorAll(".menu-section").forEach(section => section.style.display = "none");
+        document.getElementById(category).style.display = "block";
+    }
+
+    function updateQuantity(item, change) {
+        if ((quantities[item] + change) >= 0) {
+            quantities[item] += change;
+            document.getElementById(item + '-qty').innerText = quantities[item];
+            updateTotal();
+        }
+    }
+
+    function updateTotal() {
+        let total = Object.keys(quantities).reduce((sum, item) => sum + (quantities[item] * prices[item]), 0);
+        document.getElementById("total").innerText = "Total Bill: ₹" + total;
+    }
+
+    function placeOrder() {
+        let orderDetails = "";
+        let total = 0;
+        for (let item in quantities) {
+            if (quantities[item] > 0) {
+                orderDetails += `<div>${item.replace(/_/g, " ")} - ${quantities[item]} x ₹${prices[item]} = ₹${quantities[item]*prices[item]}</div>`;
+                total += quantities[item] * prices[item];
+            }
+        }
+        if (!orderDetails) {
+            alert("Please select at least one item to order.");
+            return;
+        }
+        document.getElementById('orderDetails').innerHTML = orderDetails;
+        document.getElementById('orderTotal').innerHTML = `<strong>Total Bill: ₹${total}</strong>`;
+        document.getElementById('orderModal').style.display = "block";
+        window.orderMessage = `*Order details:*\n\n${orderDetails.replace(/<div>/g, '').replace(/<\/div>/g, '\n')}\nTotal Bill: ₹${total}\n\n`;
+    }
+
+    function confirmOrder() {
+        let encodedMessage = encodeURIComponent(window.orderMessage);
+        let whatsappURL = `https://wa.me/918436778056?text=${encodedMessage}`;
+        window.open(whatsappURL, "_blank");
+        document.getElementById('orderModal').style.display = "none";
+    }
+</script>
+</body>
+</html>
 <div class="menu-item">
     <span>Black Coffee - ₹20</span>
     <div class="quantity-controls">

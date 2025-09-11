@@ -609,7 +609,7 @@
         }
 
         // Create WhatsApp message
-let message = `*Room No: 101*\n\n*Order details:*\n\n${orderDetails}\nTotal Bill: ₹${total}\n\n*Please Verify Order Details, Room No. & Block Before Sending Message*`;
+let message = `*Room No: 101*\n\n*Order details:*\n\n${orderDetails}\nTotal Bill: ₹${total}\n\n`;
     let encodedMessage = encodeURIComponent(message);
     let whatsappURL = `https://wa.me/918436778056?text=${encodedMessage}`;
 

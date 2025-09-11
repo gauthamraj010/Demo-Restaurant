@@ -615,7 +615,7 @@
     document.getElementById('orderDetails').innerHTML = orderDetails;
     document.getElementById('orderTotal').innerHTML = `<strong>Total Bill: ₹${total}</strong>`;
     document.getElementById('orderModal').style.display = "block";
-    window.orderMessage = `*Order details:*\n\n${orderDetails.replace(/<div>/g, '').replace(/<\/div>/g, '\n')}\nTotal Bill: ₹${total}\n\n*Please Verify Order Details Before Sending Message*`;
+    window.orderMessage = `*Order details:*\n\n${orderDetails.replace(/<div>/g, '').replace(/<\/div>/g, '\n')}\nTotal Bill: ₹${total}\n\n`;
 }
 
 function confirmOrder() {

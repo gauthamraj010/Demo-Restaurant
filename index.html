@@ -47,8 +47,6 @@
     <button class="category-button" onclick="showCategory('lunch')">Lunch</button>
     <button class="category-button" onclick="showCategory('dinner')">Dinner</button>
 
-    <div id="error-message" class="error-message"></div>
-
     <div id="beverages" class="menu-section">
         <h2>Beverages:</h2>
   <div class="menu-item">
@@ -536,38 +534,48 @@
 };
 
     function showCategory(category) {
-        let now = new Date();
-        let hour = now.getHours();
-        let minute = now.getMinutes();
-        let currentTime = hour * 60 + minute;
+    // Remove any existing error message
+    let oldError = document.getElementById("error-message");
+    if (oldError) oldError.remove();
 
-        let availableTimes = {
-            beverages: { start: 390, end: 1290 }, // 6:30 AM - 9:30 PM
-            breakfast: { start: 450, end: 630 }, // 7:30 AM - 10:30 AM
-            lunch: { start: 750, end: 900 },     // 12:30 PM - 3:00 PM
-            dinner: { start: 1080, end: 1410 }   // 6:00 PM - 11:30 PM
-        };
+    let now = new Date();
+    let hour = now.getHours();
+    let minute = now.getMinutes();
+    let currentTime = hour * 60 + minute;
 
-        document.getElementById("error-message").innerText = "";
-        
-        if (availableTimes[category]) {
-    let { start, end } = availableTimes[category];
-    if (currentTime < start || currentTime > end) {
-        document.getElementById("error-message").innerText = 
-            `${category.charAt(0).toUpperCase() + category.slice(1)} is not available now.`;
-        // Hide all menu sections:
-        document.querySelectorAll(".menu-section").forEach(section => section.style.display = "none");
-        return; // Stop further execution
+    let availableTimes = {
+        beverages: { start: 390, end: 1290 }, // 6:30 AM - 9:30 PM
+        breakfast: { start: 450, end: 630 },  // 7:30 AM - 10:30 AM
+        lunch: { start: 750, end: 900 },      // 12:30 PM - 3:00 PM
+        dinner: { start: 1080, end: 1410 }    // 6:00 PM - 11:30 PM
+    };
+
+    // Find the correct button for the clicked category
+    let button = document.querySelector(`button[onclick="showCategory('${category}')"]`);
+
+    // Check category availability
+    if (availableTimes[category]) {
+        let { start, end } = availableTimes[category];
+        if (currentTime < start || currentTime > end) {
+            // Create a new error message div
+            let errorDiv = document.createElement("div");
+            errorDiv.id = "error-message";
+            errorDiv.className = "error-message";
+            errorDiv.innerText = `${category.charAt(0).toUpperCase() + category.slice(1)} is not available now.`;
+            // Insert the error message directly after the clicked button
+            button.parentNode.insertBefore(errorDiv, button.nextSibling);
+            // Hide all menu sections
+            document.querySelectorAll(".menu-section").forEach(section => section.style.display = "none");
+            return;
+        }
     }
+
+    // If available, make sure no error message is shown and show the menu section
+    document.querySelectorAll(".error-message").forEach(e => e.remove());
+    document.querySelectorAll(".menu-section").forEach(section => section.style.display = "none");
+    document.getElementById(category).style.display = "block";
 }
 
-
-        // Hide all categories
-        document.querySelectorAll(".menu-section").forEach(section => section.style.display = "none");
-        
-        // Show the selected category
-        document.getElementById(category).style.display = "block";
-    }
 
     function updateQuantity(item, change) {
         if (quantities[item] + change >= 0) {

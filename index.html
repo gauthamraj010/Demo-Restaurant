@@ -576,7 +576,7 @@
     function updateTotal() {
         let total = Object.keys(quantities).reduce((sum, item) => sum + (quantities[item] * prices[item]), 0);
         document.getElementById("total").innerText = "Total Bill: ₹" + total;
-    }/
+    }
 
     function placeOrder() {
 

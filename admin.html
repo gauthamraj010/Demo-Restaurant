@@ -11,7 +11,6 @@
     h1 {color:#0077cc;}
     label, input, select {margin-top:10px;}
     .itemRow {display: flex; justify-content:space-between; margin:10px 0; background:#f2f2f2; padding:8px 12px; border-radius:6px;}
-    .category-checkbox {margin-left:6px;}
     .cat-label {margin-right:12px;}
     .edit-btn, .del-btn { margin-left: 6px; }
     .search-box { margin: 20px 0; }
@@ -40,10 +39,10 @@
       <input id="itemPrice" placeholder="Price (₹)" type="number" min="1"/><br>
       <div>
         Categories:<br>
-        <label class="cat-label"><input type="checkbox" class="category-checkbox" value="beverages"> Beverages</label>
-        <label class="cat-label"><input type="checkbox" class="category-checkbox" value="breakfast"> Breakfast</label>
-        <label class="cat-label"><input type="checkbox" class="category-checkbox" value="lunch"> Lunch</label>
-        <label class="cat-label"><input type="checkbox" class="category-checkbox" value="dinner"> Dinner</label>
+        <label class="cat-label"><input type="radio" name="category" value="beverages" class="category-radio"> Beverages</label>
+        <label class="cat-label"><input type="radio" name="category" value="breakfast" class="category-radio"> Breakfast</label>
+        <label class="cat-label"><input type="radio" name="category" value="lunch" class="category-radio"> Lunch</label>
+        <label class="cat-label"><input type="radio" name="category" value="dinner" class="category-radio"> Dinner</label>
       </div>
       <button class="btn" id="saveBtn" onclick="submitItem()">Save</button>
       <button class="btn" id="cancelEditBtn" onclick="cancelEdit()" style="display:none;background-color:#888;">Cancel</button>
@@ -99,7 +98,8 @@
     function submitItem() {
       const name = document.getElementById('itemName').value.trim();
       const price = parseInt(document.getElementById('itemPrice').value);
-      const cats = Array.from(document.querySelectorAll('.category-checkbox:checked')).map(cb=>cb.value);
+      const selectedRadio = document.querySelector('input[name="category"]:checked');
+      const cats = selectedRadio ? [selectedRadio.value] : [];
       if (!name || !price || cats.length == 0) {
         document.getElementById('formMsg').textContent = "All fields are required!";
         return;
@@ -119,7 +119,7 @@
       document.getElementById('itemFormBox').querySelector('h3').textContent = "Add New Item";
       document.getElementById('itemName').value = "";
       document.getElementById('itemPrice').value = "";
-      document.querySelectorAll('.category-checkbox').forEach(cb=>cb.checked=false);
+      document.querySelectorAll('input[name="category"]').forEach(rb=>rb.checked = false);
       document.getElementById('saveBtn').textContent = "Save";
       document.getElementById('cancelEditBtn').style.display = "none";
       editingId = null;
@@ -163,7 +163,8 @@
       document.getElementById('itemFormBox').querySelector('h3').textContent = "Edit Item";
       document.getElementById('itemName').value = item.name;
       document.getElementById('itemPrice').value = item.price;
-      document.querySelectorAll('.category-checkbox').forEach(cb=>cb.checked = item.categories.includes(cb.value));
+      // Set the radio as checked
+      document.querySelectorAll('input[name="category"]').forEach(rb => rb.checked = item.categories.includes(rb.value));
       editingId = id;
       document.getElementById('saveBtn').textContent = "Update";
       document.getElementById('cancelEditBtn').style.display = "inline-block";

@@ -551,12 +551,16 @@
         document.getElementById("error-message").innerText = "";
         
         if (availableTimes[category]) {
-            let { start, end } = availableTimes[category];
-            if (currentTime < start || currentTime > end) {
-                document.getElementById("error-message").innerText = 
-                    `${category.charAt(0).toUpperCase() + category.slice(1)} is not available now.`;
-            }
-        }
+    let { start, end } = availableTimes[category];
+    if (currentTime < start || currentTime > end) {
+        document.getElementById("error-message").innerText = 
+            `${category.charAt(0).toUpperCase() + category.slice(1)} is not available now.`;
+        // Hide all menu sections:
+        document.querySelectorAll(".menu-section").forEach(section => section.style.display = "none");
+        return; // Stop further execution
+    }
+}
+
 
         // Hide all categories
         document.querySelectorAll(".menu-section").forEach(section => section.style.display = "none");

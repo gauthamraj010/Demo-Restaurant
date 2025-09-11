@@ -71,7 +71,7 @@
                 section.innerHTML = "";
                 let catItems = menuItems.filter(item => Array.isArray(item.categories) && item.categories.includes(cat));
                 catItems.forEach(item => {
-                    let itemKey = item.name.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
+                    let itemKey = item.id; // Firestore document ID is always unique
                     prices[itemKey] = item.price;
                     if (!(itemKey in quantities)) quantities[itemKey] = 0;
                     section.innerHTML += `

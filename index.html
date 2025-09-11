@@ -441,19 +441,6 @@
 
     <div id="total">Total Bill: ₹0</div>
 
-    <h3>Select Block:</h3>
-    <select id="block" onchange="updateRooms()">
-        <option value="">Select Block</option>
-        <option value="A">A</option>
-        <option value="B">B</option>
-        <option value="C">C</option>
-    </select>
-
-    <h3>Select Room:</h3>
-    <select id="room">
-        <option value="">Select Room</option>
-    </select>
-
 <br><br>
 
 <button class="order-button" onclick="placeOrder()">Order Now</button>
@@ -589,31 +576,9 @@
     function updateTotal() {
         let total = Object.keys(quantities).reduce((sum, item) => sum + (quantities[item] * prices[item]), 0);
         document.getElementById("total").innerText = "Total Bill: ₹" + total;
-    }
-
-    function updateRooms() {
-        let block = document.getElementById("block").value;
-        let roomSelect = document.getElementById("room");
-        let rooms = {
-            A: ["101", "102", "103", "201", "202", "203", "204", "205", "301", "302", "303"],
-            B: ["101", "102", "103", "201", "202", "555", "301", "302", "303", "333"],
-            C: ["222", "444", "777", "501", "504", "503", "502", "505", "999"]
-        };
-        roomSelect.innerHTML = `<option value="">Select Room</option>`;
-        rooms[block]?.forEach(room => {
-            roomSelect.innerHTML += `<option value="${room}">${room}</option>`;
-        });
-    }
+    }/
 
     function placeOrder() {
-        let block = document.getElementById("block").value;
-        let room = document.getElementById("room").value;
-
-        // Show warning if block or room is not selected
-        if (!block || !room) {
-            alert("Plz Select Block/Room");
-            return;
-        }
 
         let orderDetails = "";
         let total = 0;
@@ -632,7 +597,7 @@
         }
 
         // Create WhatsApp message
-let message = `*Room No:* ${room} (${block})\n\n*Order details:*\n\n${orderDetails}\nTotal Bill: ₹${total}\n\n*Please Verify Order Details, Room No. & Block Before Sending Message*`;
+let message = `*Room No: 101*\n\n*Order details:*\n\n${orderDetails}\nTotal Bill: ₹${total}\n\n*Please Verify Order Details, Room No. & Block Before Sending Message*`;
     let encodedMessage = encodeURIComponent(message);
     let whatsappURL = `https://wa.me/918436778056?text=${encodedMessage}`;
 

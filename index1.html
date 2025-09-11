@@ -61,32 +61,34 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // Maps: id -> price; id -> quantity; id -> name (for order summary)
         let prices = {};
         let quantities = {};
+        let idToName = {};
 
         function renderMenus(menuItems) {
-    const categories = ["beverages", "breakfast", "lunch", "dinner"];
-    categories.forEach(cat => {
-        const section = document.getElementById(cat).querySelector('.menu-list');
-        section.innerHTML = "";
-        let catItems = menuItems.filter(item => Array.isArray(item.categories) && item.categories.includes(cat));
-        catItems.forEach(item => {
-            let itemKey = item.id; // Use document ID for uniqueness!
-            prices[itemKey] = item.price;
-            if (!(itemKey in quantities)) quantities[itemKey] = 0;
-            section.innerHTML += `
-            <div class="menu-item">
-                <span>${item.name} - ₹${item.price}</span>
-                <div class="quantity-controls">
-                    <button onclick="updateQuantity('${itemKey}', -1)">-</button>
-                    <span id="${itemKey}-qty">0</span>
-                    <button onclick="updateQuantity('${itemKey}', 1)">+</button>
-                </div>
-            </div>`;
-        });
-    });
-}
-
+            const categories = ["beverages", "breakfast", "lunch", "dinner"];
+            categories.forEach(cat => {
+                const section = document.getElementById(cat).querySelector('.menu-list');
+                section.innerHTML = "";
+                let catItems = menuItems.filter(item => Array.isArray(item.categories) && item.categories.includes(cat));
+                catItems.forEach(item => {
+                    let itemKey = item.id; // Firestore ID = truly unique key
+                    prices[itemKey] = item.price;
+                    idToName[itemKey] = item.name;
+                    if (!(itemKey in quantities)) quantities[itemKey] = 0;
+                    section.innerHTML += `
+                    <div class="menu-item">
+                        <span>${item.name} - ₹${item.price}</span>
+                        <div class="quantity-controls">
+                            <button onclick="updateQuantity('${itemKey}', -1)">-</button>
+                            <span id="${itemKey}-qty">0</span>
+                            <button onclick="updateQuantity('${itemKey}', 1)">+</button>
+                        </div>
+                    </div>`;
+                });
+            });
+        }
 
         db.collection("menuItems").get().then(snap => {
             let items = [];
@@ -116,25 +118,26 @@
             document.getElementById(category).style.display = "block";
         }
 
-        function updateQuantity(item, change) {
-            if ((quantities[item] + change) >= 0) {
-                quantities[item] += change;
-                document.getElementById(item + '-qty').innerText = quantities[item];
+        function updateQuantity(itemKey, change) {
+            if ((quantities[itemKey] + change) >= 0) {
+                quantities[itemKey] += change;
+                document.getElementById(itemKey + '-qty').innerText = quantities[itemKey];
                 updateTotal();
             }
         }
         function updateTotal() {
-            let total = Object.keys(quantities).reduce((sum, item) => sum + (quantities[item] * prices[item]), 0);
+            let total = Object.keys(quantities).reduce((sum, itemKey) => sum + (quantities[itemKey] * prices[itemKey]), 0);
             document.getElementById("total").innerText = "Total Bill: ₹" + total;
         }
 
         function placeOrder() {
             let orderDetails = "";
             let total = 0;
-            for (let item in quantities) {
-                if (quantities[item] > 0) {
-                    orderDetails += `${item.replace(/_/g, " ")} - ${quantities[item]}\n`;
-                    total += quantities[item] * prices[item];
+            for (let itemKey in quantities) {
+                if (quantities[itemKey] > 0) {
+                    let itemName = idToName[itemKey] || itemKey;
+                    orderDetails += `${itemName} - ${quantities[itemKey]}\n`;
+                    total += quantities[itemKey] * prices[itemKey];
                 }
             }
             if (!orderDetails) {

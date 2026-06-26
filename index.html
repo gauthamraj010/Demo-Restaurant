@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reception (1)</title>
-    <!-- Firebase Libraries from index_booking.html -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -182,6 +181,8 @@
             font-size: 13px;
             font-weight: 700;
             cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
             transition: all 0.2s ease;
         }
 
@@ -241,13 +242,11 @@
 
     <div class="web-app-container">
         
-        <!-- Header Section based on Default.jpg -->
         <header class="header">
             <div class="logo-badge">DR</div>
             <h1 class="app-title">Demo Resort</h1>
         </header>
 
-        <!-- Navigation Bar -->
         <nav class="nav-tabs">
             <a class="tab-item active" id="dashboardTab" onclick="showDashboardView()">
                 <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
@@ -267,12 +266,9 @@
             </a>
         </nav>
 
-        <!-- Dynamic Content Workspace Container -->
         <div id="appWorkspace" style="flex: 1; overflow-y: auto;">
             
-            <!-- VIEW A: Dashboard Grid List -->
             <main class="main-menu" id="dashboardView">
-                <!-- Card 1: Upcoming Bookings -->
                 <div class="menu-card">
                     <div class="card-icon-side bg-bookings">
                         <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" /></svg>
@@ -283,18 +279,16 @@
                     </div>
                 </div>
 
-                <!-- Card 2: Room Details -->
                 <div class="menu-card">
                     <div class="card-icon-side bg-rooms">
                         <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 16.5h1.5M13.5 16.5H15" /></svg>
                     </div>
                     <div class="card-info-side">
                         <div class="card-title">Room Details</div>
-                        <button class="manage-btn">Manage</button>
+                        <a href="room_details.html" class="manage-btn">Manage</a>
                     </div>
                 </div>
 
-                <!-- Card 3: Staff Details -->
                 <div class="menu-card">
                     <div class="card-icon-side bg-staff">
                         <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>
@@ -305,7 +299,6 @@
                     </div>
                 </div>
 
-                <!-- Card 4: Menu Card Edit -->
                 <div class="menu-card">
                     <div class="card-icon-side bg-menu">
                         <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
@@ -317,7 +310,6 @@
                 </div>
             </main>
 
-            <!-- VIEW B: Calendar System Content (Merged from index_booking.html) -->
             <div class="calendar-container" id="calendarContainer" style="display: none;">
                 <a href="https://menucard-fc3a39.gitlab.io/admin.html" class="new-booking-inline-btn">New Booking</a>
                 <h2 style="text-align:center; margin-bottom:11px; font-size: 18px;">Bookings Calendar</h2>
@@ -333,7 +325,6 @@
         </div>
     </div>
 
-    <!-- AUTHENTICATION DIALOG (Pops over content layout seamlessly) -->
     <div id="loginModal" class="modal-bg" style="display:none;">
         <form class="modal" onsubmit="event.preventDefault();loginWithEmail();">
             <div class="modal-title">Admin Login</div>
@@ -346,7 +337,6 @@
         </form>
     </div>
 
-    <!-- SYSTEM MODAL: EDIT DATA -->
     <div id="editModalBg" class="modal-bg" style="display:none;">
         <form class="modal" id="editModal" onsubmit="event.preventDefault();submitEdit();">
             <div class="modal-title">Edit Booking</div>
@@ -365,7 +355,6 @@
         </form>
     </div>
 
-    <!-- SYSTEM MODAL: CONFIRM DELETION -->
     <div id="deleteModalBg" class="modal-bg" style="display:none;">
         <div class="modal">
             <div class="modal-title">Delete Booking</div>
@@ -378,9 +367,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT INFRASTRUCTURE -->
     <script>
-        // Target Layout State Toggling Mechanics
         function showDashboardView() {
             document.getElementById('dashboardTab').classList.add('active');
             document.getElementById('dashboardView').style.display = 'flex';
@@ -394,7 +381,6 @@
             renderCalendar();
         }
 
-        // Firebase Configuration Signature
         const firebaseConfig = {
             apiKey: "AIzaSyCebk_0DBBu5w0cvWP0lUKqQanmiwoC42U",
             authDomain: "booking-25ba4.firebaseapp.com",
@@ -414,11 +400,9 @@
         let currentDeleteId = null;
         let currentDeleteData = null;
 
-        // Auth Context Synchronization Lifecycle
         auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('loginModal').style.display = 'none';
-                // Starts natively displaying workspace matrix on launch
                 showDashboardView();
             } else {
                 document.getElementById('loginModal').style.display = '';
@@ -427,7 +411,6 @@
             }
         });
 
-        // Administration Core Logging Authentication API
         function loginWithEmail(){
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
@@ -436,7 +419,6 @@
                 .catch(e => { document.getElementById('loginError').textContent = e.message; });
         }
 
-        // Calendar Computation Routines
         function changeMonth(diff){
             calendarMonth += diff;
             if(calendarMonth < 0){ calendarMonth = 11; calendarYear--; }
@@ -445,6 +427,14 @@
             renderCalendar();
             document.getElementById('bookings-list').innerHTML = '';
         }
+
+        document.getElementById('editRoomNo').addEventListener('change', function() {
+            const val = this.value.trim();
+            if(val && (parseInt(val) < 1 || parseInt(val) > 7)) {
+                alert("Please select a room between 1 and 7.");
+                this.value = '';
+            }
+        });
 
         function renderCalendar(){
             const calDiv = document.getElementById('calendar');
@@ -502,7 +492,6 @@
                 });
         }
 
-        // Booking Mutation Handlers
         function openEditModal(docId){
             currentEditId = docId;
             db.collection('bookings').doc(docId).get().then(doc=>{
@@ -538,7 +527,6 @@
             }).catch(e=>{ document.getElementById('editError').textContent=e.message; });
         }
 
-        // Booking Destruction Handlers
         function openDeleteModal(docId){
             currentDeleteId = docId;
             db.collection('bookings').doc(docId).get().then(doc=>{

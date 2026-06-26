@@ -74,7 +74,7 @@
             letter-spacing: 0.5px;
         }
 
-        /* 7 Rooms Grid Layout */
+        /* Rooms Grid Layout */
         .rooms-grid {
             padding: 20px;
             display: grid;
@@ -86,7 +86,7 @@
             background: var(--card-bg);
             border: 2px solid var(--border-color);
             border-radius: 12px;
-            padding: 20px;
+            padding: 20px 10px;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -94,17 +94,21 @@
         }
 
         .room-number {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 800;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            color: #000;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .room-status {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            padding: 4px 8px;
+            padding: 4px 10px;
             border-radius: 20px;
             display: inline-block;
         }
@@ -184,7 +188,7 @@
 
     <div class="web-app-container">
         <header class="header">
-            <button class="back-btn" onclick="window.location.href='reception.html'">
+            <button class="back-btn" onclick="window.location.href='index.html'">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             </button>
             <h1 class="app-title">Room Details</h1>
@@ -202,6 +206,9 @@
     <script>
         // Get today's system date cleanly formatted as YYYY-MM-DD
         const todayStr = new Date().toISOString().split('T')[0];
+
+        // Your 7 Exact Explicit Room Names
+        const customRoomsList = ["A-1", "Twin-1", "Twin-2", "Paddy", "P-1", "P-2", "Delux"];
 
         // ----------------------------------------------------
         // INITIALIZE FIREBASE INSTANCES (4 Separate Accounts Setup)
@@ -226,41 +233,41 @@
         // System Data Trackers
         let roomsState = {}; 
 
-        // Generate the 7 Rooms and watch live operational statuses
+        // Generate the Rooms matrix and watch live operational statuses
         async function fetchAndRenderRooms() {
             const container = document.getElementById('roomsContainer');
             container.innerHTML = '';
 
-            for (let i = 1; i <= 7; i++) {
-                roomsState[i] = { status: 'Available', data: null, cs2DocId: null };
+            for (let roomName of customRoomsList) {
+                roomsState[roomName] = { status: 'Available', data: null, cs2DocId: null };
 
                 // 1. First, check if Room is already active/checked-in inside CS2
-                let cs2Snap = await dbCS2.collection('active_stays').where('roomNo', '==', String(i)).get();
+                let cs2Snap = await dbCS2.collection('active_stays').where('roomNo', '==', roomName).get();
                 
                 if (!cs2Snap.empty) {
-                    roomsState[i].status = 'CheckedIn';
-                    roomsState[i].data = cs2Snap.docs[0].data();
-                    roomsState[i].cs2DocId = cs2Snap.docs[0].id;
+                    roomsState[roomName].status = 'CheckedIn';
+                    roomsState[roomName].data = cs2Snap.docs[0].data();
+                    roomsState[roomName].cs2DocId = cs2Snap.docs[0].id;
                 } else {
                     // 2. If clean, check CS1 to see if the owner pre-booked it for today
                     let cs1Snap = await dbCS1.collection('bookings')
-                                             .where('roomNo', '==', String(i))
+                                             .where('roomNo', '==', roomName)
                                              .where('checkin', '==', todayStr).get();
                     if (!cs1Snap.empty) {
-                        roomsState[i].status = 'Reserved';
-                        roomsState[i].data = cs1Snap.docs[0].data();
+                        roomsState[roomName].status = 'Reserved';
+                        roomsState[roomName].data = cs1Snap.docs[0].data();
                     }
                 }
 
                 // Render Room UI Graphic Element
                 let statusClass = 'status-available';
                 let label = 'Available';
-                if (roomsState[i].status === 'Reserved') { statusClass = 'status-reserved'; label = 'Pre-Booked'; }
-                if (roomsState[i].status === 'CheckedIn') { statusClass = 'status-checkedin'; label = 'Occupied'; }
+                if (roomsState[roomName].status === 'Reserved') { statusClass = 'status-reserved'; label = 'Pre-Booked'; }
+                if (roomsState[roomName].status === 'CheckedIn') { statusClass = 'status-checkedin'; label = 'Occupied'; }
 
                 container.innerHTML += `
-                    <div class="room-card" onclick="handleRoomClick(${i})">
-                        <div class="room-number">Room 0${i}</div>
+                    <div class="room-card" onclick="handleRoomClick('${roomName}')">
+                        <div class="room-number">${roomName}</div>
                         <div class="room-status ${statusClass}">${label}</div>
                     </div>
                 `;
@@ -268,52 +275,52 @@
         }
 
         // Room Selection Route Controller
-        function handleRoomClick(roomNum) {
-            const room = roomsState[roomNum];
+        function handleRoomClick(roomName) {
+            const room = roomsState[roomName];
             const modalBg = document.getElementById('roomModalBg');
             const modalContent = document.getElementById('modalContent');
             modalBg.style.display = 'flex';
 
             if (room.status === 'CheckedIn') {
                 // REDIRECTION LINE: Hands complete management to addbill.html
-                window.location.href = `addbill.html?room=${roomNum}&stayId=${room.cs2DocId}`;
+                window.location.href = `addbill.html?room=${encodeURIComponent(roomName)}&stayId=${room.cs2DocId}`;
                 return;
             }
 
             if (room.status === 'Reserved') {
                 // Setup pre-filled verification for Owner's Prebooking
                 modalContent.innerHTML = `
-                    <div class="modal-title">Pre-Booked Arrival (Room 0${roomNum})</div>
+                    <div class="modal-title">Pre-Booked Arrival (${roomName})</div>
                     <div class="guest-details-box">
                         <b>Guest Name:</b> ${room.data.name}<br>
                         <b>Phone No:</b> ${room.data.phone}<br>
                         <b>Advance Paid:</b> ₹${room.data.advance || 0}<br>
                         <b>Total Cost:</b> ₹${room.data.total || 0}
                     </div>
-                    <button class="action-btn btn-checkin" onclick="processCheckIn(${roomNum}, 'owner')">Confirm Check-In</button>
+                    <button class="action-btn btn-checkin" onclick="processCheckIn('${roomName}', 'owner')">Confirm Check-In</button>
                     <button class="action-btn btn-cancel" onclick="closeModal()">Close</button>
                 `;
             } else {
                 // Clear form window for Walk-in creation
                 modalContent.innerHTML = `
-                    <div class="modal-title">Walk-In Guest (Room 0${roomNum})</div>
+                    <div class="modal-title">Walk-In Guest (${roomName})</div>
                     <input type="text" id="walkInName" placeholder="Guest Name" required>
                     <input type="text" id="walkInPhone" placeholder="Phone Number" required>
                     <input type="number" id="walkInTotal" placeholder="Total Amount" required>
                     <input type="number" id="walkInAdvance" placeholder="Advance Paid" required>
-                    <button class="action-btn btn-walkin" onclick="saveWalkInAndCheckIn(${roomNum})">Save & Check-In</button>
+                    <button class="action-btn btn-walkin" onclick="saveWalkInAndCheckIn('${roomName}')">Save & Check-In</button>
                     <button class="action-btn btn-cancel" onclick="closeModal()">Cancel</button>
                 `;
             }
         }
 
         // Process Check-In for Pre-booked Guests
-        function processCheckIn(roomNum, creatorType) {
-            const roomData = roomsState[roomNum].data;
+        function processCheckIn(roomName, creatorType) {
+            const roomData = roomsState[roomName].data;
             
             // Push structured details to Operational Account CS2 to trigger Balance Sheet
             dbCS2.collection('active_stays').add({
-                roomNo: String(roomNum),
+                roomNo: roomName,
                 name: roomData.name,
                 phone: roomData.phone,
                 total: parseFloat(roomData.total),
@@ -328,7 +335,7 @@
         }
 
         // Create Walk-in Record & Check-In Directly
-        function saveWalkInAndCheckIn(roomNum) {
+        function saveWalkInAndCheckIn(roomName) {
             const name = document.getElementById('walkInName').value.trim();
             const phone = document.getElementById('walkInPhone').value.trim();
             const total = parseFloat(document.getElementById('walkInTotal').value) || 0;
@@ -338,7 +345,7 @@
 
             // 1. Log audit copy to CS1 as walkin context tracking
             dbCS1.collection('bookings').add({
-                roomNo: String(roomNum),
+                roomNo: roomName,
                 name: name,
                 phone: phone,
                 total: total,
@@ -348,7 +355,7 @@
             }).then(() => {
                 // 2. Trigger operational entry in CS2 instantly
                 return dbCS2.collection('active_stays').add({
-                    roomNo: String(roomNum),
+                    roomNo: roomName,
                     name: name,
                     phone: phone,
                     total: total,

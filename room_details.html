@@ -50,8 +50,71 @@
             border: 1px solid var(--border-color);
         }
 
+        /* Top Layout Header & Navigation Tabs to match index.html exactly */
         .header {
-            padding: 20px;
+            padding: 20px 20px 10px 20px;
+            display: flex;
+            align-items: center;
+            background: #fff;
+        }
+
+        .logo-badge {
+            background-color: #0f172a;
+            color: white;
+            font-weight: 800;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            margin-right: 12px;
+        }
+
+        .app-title {
+            font-size: 20px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #000;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #fff;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tab-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .tab-item svg {
+            width: 22px;
+            height: 22px;
+            margin-bottom: 4px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+
+        .tab-item.active {
+            color: var(--primary-blue);
+            border-bottom: 3px solid var(--primary-blue);
+            margin-bottom: -2px;
+            background: #f8fafc;
+        }
+
+        /* Subheader page title with back indicator button */
+        .page-title-bar {
+            padding: 14px 20px;
             display: flex;
             align-items: center;
             background: #fff;
@@ -67,14 +130,14 @@
             align-items: center;
         }
 
-        .app-title {
-            font-size: 20px;
-            font-weight: 800;
+        .page-heading {
+            font-size: 16px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
         }
 
-        /* Rooms Grid Layout */
+        /* Rooms Matrix Grid Layout */
         .rooms-grid {
             padding: 20px;
             display: grid;
@@ -86,7 +149,7 @@
             background: var(--card-bg);
             border: 2px solid var(--border-color);
             border-radius: 12px;
-            padding: 20px 10px;
+            padding: 22px 10px;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -98,9 +161,6 @@
             font-weight: 800;
             margin-bottom: 8px;
             color: #000;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         .room-status {
@@ -108,17 +168,37 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 24px;
         }
 
-        /* Dynamic Room Color States */
+        /* Circling Loading Animation Keyframes */
+        .spinner {
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-top: 2px solid var(--primary-blue);
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Dynamic Status Background Highlights */
+        .status-loading { background: #f3f4f6; color: var(--text-muted); }
         .status-available { background: #e0f2fe; color: var(--primary-blue); }
         .status-reserved { background: #fef3c7; color: var(--warning-orange); }
         .status-checkedin { background: #fee2e2; color: var(--occupied-red); }
 
-        /* Modal Background Setup */
+        /* Modal Layout Structures */
         .modal-bg {
             position: fixed;
             top: 0; left: 0;
@@ -188,11 +268,35 @@
 
     <div class="web-app-container">
         <header class="header">
-            <button class="back-btn" onclick="window.location.href='index.html'">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            </button>
-            <h1 class="app-title">Room Details</h1>
+            <div class="logo-badge">DR</div>
+            <h1 class="app-title">Demo Resort</h1>
         </header>
+
+        <nav class="nav-tabs">
+            <div class="tab-item active" onclick="window.location.href='index.html'">
+                <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Dashboard
+            </div>
+            <div class="tab-item">
+                <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+                New bill
+            </div>
+            <div class="tab-item">
+                <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                View bill
+            </div>
+            <div class="tab-item">
+                <svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                Account
+            </div>
+        </nav>
+
+        <div class="page-title-bar">
+            <button class="back-btn" onclick="window.location.href='index.html'">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <h2 class="page-heading">Room Details</h2>
+        </div>
 
         <div class="rooms-grid" id="roomsContainer">
             </div>
@@ -204,17 +308,16 @@
     </div>
 
     <script>
-        // Get today's system date cleanly formatted as YYYY-MM-DD
-        const todayStr = new Date().toISOString().split('T')[0];
+        // Formats current local system date accurately as YYYY-MM-DD
+        const todayStr = new Date().toLocaleDateString('sv');
 
-        // Your 7 Exact Explicit Room Names
+        // Explicit Room Configuration Keys
         const customRoomsList = ["A-1", "Twin-1", "Twin-2", "Paddy", "P-1", "P-2", "Delux"];
+        let roomsState = {}; 
 
         // ----------------------------------------------------
-        // INITIALIZE FIREBASE INSTANCES (4 Separate Accounts Setup)
+        // FIREBASE INSTANCE INITIALIZATIONS
         // ----------------------------------------------------
-        
-        // CS1: Upcoming Bookings Database Account
         const appCS1 = firebase.initializeApp({
             apiKey: "AIzaSyCebk_0DBBu5w0cvWP0lUKqQanmiwoC42U",
             authDomain: "booking-25ba4.firebaseapp.com",
@@ -222,73 +325,95 @@
         }, "cs1");
         const dbCS1 = firebase.firestore(appCS1);
 
-        // CS2: Active Operational Billing Database Account
         const appCS2 = firebase.initializeApp({
-            apiKey: "AIzaSyDa-YOUR_CS2_API_KEY_HERE", // Replace with real CS2 Key
+            apiKey: "AIzaSyDa-YOUR_CS2_API_KEY_HERE", 
             authDomain: "billing-account.firebaseapp.com",
-            projectId: "billing-project-id" // Replace with real CS2 Project ID
+            projectId: "billing-project-id" 
         }, "cs2");
         const dbCS2 = firebase.firestore(appCS2);
 
-        // System Data Trackers
-        let roomsState = {}; 
-
-        // Generate the Rooms matrix and watch live operational statuses
-        async function fetchAndRenderRooms() {
+        // Preload layout blocks instantly before executing background database reading operations
+        function preloadRoomsLayout() {
             const container = document.getElementById('roomsContainer');
             container.innerHTML = '';
 
-            for (let roomName of customRoomsList) {
-                roomsState[roomName] = { status: 'Available', data: null, cs2DocId: null };
+            customRoomsList.forEach(roomName => {
+                roomsState[roomName] = { status: 'Loading', data: null, cs2DocId: null };
+                container.innerHTML += `
+                    <div class="room-card" id="card-${roomName}" onclick="handleRoomClick('${roomName}')">
+                        <div class="room-number">${roomName}</div>
+                        <div class="room-status status-loading" id="status-${roomName}">
+                            <div class="spinner"></div> Checking...
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Execute background state calculations
+            fetchActiveRoomStatuses();
+        }
 
-                // 1. First, check if Room is already active/checked-in inside CS2
-                let cs2Snap = await dbCS2.collection('active_stays').where('roomNo', '==', roomName).get();
-                
-                if (!cs2Snap.empty) {
-                    roomsState[roomName].status = 'CheckedIn';
-                    roomsState[roomName].data = cs2Snap.docs[0].data();
-                    roomsState[roomName].cs2DocId = cs2Snap.docs[0].id;
-                } else {
-                    // 2. If clean, check CS1 to see if the owner pre-booked it for today
+        // Evaluate conditions asynchronously and swap out animation badges on resolution
+        async function fetchActiveRoomStatuses() {
+            for (let roomName of customRoomsList) {
+                try {
+                    // Step A: Evaluate Live Active Check-Ins within Operational Billing Node (CS2)
+                    let cs2Snap = await dbCS2.collection('active_stays').where('roomNo', '==', roomName).get();
+                    
+                    if (!cs2Snap.empty) {
+                        updateRoomUIState(roomName, 'CheckedIn', cs2Snap.docs[0].data(), cs2Snap.docs[0].id);
+                        continue;
+                    }
+
+                    // Step B: Evaluate Pre-booked entries logged on current date string inside CS1
                     let cs1Snap = await dbCS1.collection('bookings')
                                              .where('roomNo', '==', roomName)
                                              .where('checkin', '==', todayStr).get();
+                    
                     if (!cs1Snap.empty) {
-                        roomsState[roomName].status = 'Reserved';
-                        roomsState[roomName].data = cs1Snap.docs[0].data();
+                        updateRoomUIState(roomName, 'Reserved', cs1Snap.docs[0].data(), null);
+                    } else {
+                        updateRoomUIState(roomName, 'Available', null, null);
                     }
+                } catch (error) {
+                    console.error("Database resolution error on room: " + roomName, error);
+                    updateRoomUIState(roomName, 'Available', null, null);
                 }
-
-                // Render Room UI Graphic Element
-                let statusClass = 'status-available';
-                let label = 'Available';
-                if (roomsState[roomName].status === 'Reserved') { statusClass = 'status-reserved'; label = 'Pre-Booked'; }
-                if (roomsState[roomName].status === 'CheckedIn') { statusClass = 'status-checkedin'; label = 'Occupied'; }
-
-                container.innerHTML += `
-                    <div class="room-card" onclick="handleRoomClick('${roomName}')">
-                        <div class="room-number">${roomName}</div>
-                        <div class="room-status ${statusClass}">${label}</div>
-                    </div>
-                `;
             }
         }
 
-        // Room Selection Route Controller
+        // Injects resolved values directly into the DOM blocks
+        function updateRoomUIState(roomName, status, data, docId) {
+            roomsState[roomName] = { status: status, data: data, cs2DocId: docId };
+            const badge = document.getElementById(`status-${roomName}`);
+            
+            badge.className = 'room-status'; 
+            if (status === 'CheckedIn') {
+                badge.classList.add('status-checkedin');
+                badge.innerHTML = 'Occupied';
+            } else if (status === 'Reserved') {
+                badge.classList.add('status-reserved');
+                badge.innerHTML = 'Pre-Booked';
+            } else {
+                badge.classList.add('status-available');
+                badge.innerHTML = 'Available';
+            }
+        }
+
         function handleRoomClick(roomName) {
             const room = roomsState[roomName];
+            if (room.status === 'Loading') return;
+
             const modalBg = document.getElementById('roomModalBg');
             const modalContent = document.getElementById('modalContent');
             modalBg.style.display = 'flex';
 
             if (room.status === 'CheckedIn') {
-                // REDIRECTION LINE: Hands complete management to addbill.html
                 window.location.href = `addbill.html?room=${encodeURIComponent(roomName)}&stayId=${room.cs2DocId}`;
                 return;
             }
 
             if (room.status === 'Reserved') {
-                // Setup pre-filled verification for Owner's Prebooking
                 modalContent.innerHTML = `
                     <div class="modal-title">Pre-Booked Arrival (${roomName})</div>
                     <div class="guest-details-box">
@@ -301,7 +426,6 @@
                     <button class="action-btn btn-cancel" onclick="closeModal()">Close</button>
                 `;
             } else {
-                // Clear form window for Walk-in creation
                 modalContent.innerHTML = `
                     <div class="modal-title">Walk-In Guest (${roomName})</div>
                     <input type="text" id="walkInName" placeholder="Guest Name" required>
@@ -314,11 +438,8 @@
             }
         }
 
-        // Process Check-In for Pre-booked Guests
         function processCheckIn(roomName, creatorType) {
             const roomData = roomsState[roomName].data;
-            
-            // Push structured details to Operational Account CS2 to trigger Balance Sheet
             dbCS2.collection('active_stays').add({
                 roomNo: roomName,
                 name: roomData.name,
@@ -330,20 +451,18 @@
                 createdBy: creatorType
             }).then(() => {
                 closeModal();
-                fetchAndRenderRooms();
+                preloadRoomsLayout();
             });
         }
 
-        // Create Walk-in Record & Check-In Directly
         function saveWalkInAndCheckIn(roomName) {
             const name = document.getElementById('walkInName').value.trim();
             const phone = document.getElementById('walkInPhone').value.trim();
             const total = parseFloat(document.getElementById('walkInTotal').value) || 0;
             const advance = parseFloat(document.getElementById('walkInAdvance').value) || 0;
 
-            if (!name || !phone) { alert("Please complete name and phone fields."); return; }
+            if (!name || !phone) { alert("Please fill name and phone fields."); return; }
 
-            // 1. Log audit copy to CS1 as walkin context tracking
             dbCS1.collection('bookings').add({
                 roomNo: roomName,
                 name: name,
@@ -353,7 +472,6 @@
                 checkin: todayStr,
                 createdBy: 'staff'
             }).then(() => {
-                // 2. Trigger operational entry in CS2 instantly
                 return dbCS2.collection('active_stays').add({
                     roomNo: roomName,
                     name: name,
@@ -366,14 +484,14 @@
                 });
             }).then(() => {
                 closeModal();
-                fetchAndRenderRooms();
+                preloadRoomsLayout();
             });
         }
 
         function closeModal() { document.getElementById('roomModalBg').style.display = 'none'; }
 
         // Start initialization process on view mount
-        window.onload = fetchAndRenderRooms;
+        window.onload = preloadRoomsLayout;
     </script>
 </body>
 </html>

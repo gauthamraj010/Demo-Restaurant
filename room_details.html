@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Room Details - 1(b)</title>
+    <!-- Firebase Apps Compatible Modules -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     
@@ -20,248 +21,56 @@
             --warning-orange: #f59e0b;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', -apple-system, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            display: flex;
-            justify-content: center;
-            align-items: start;
-            min-height: 100vh;
-            padding: 20px;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: start; min-height: 100vh; padding: 20px; }
 
         .web-app-container {
-            width: 100%;
-            max-width: 480px;
-            background: #fcfcfd;
-            min-height: 85vh;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
+            width: 100%; max-width: 480px; background: #fcfcfd; min-height: 85vh;
+            border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border-color);
         }
 
-        /* Top Layout Header & Navigation Tabs to match index.html exactly */
-        .header {
-            padding: 20px 20px 10px 20px;
-            display: flex;
-            align-items: center;
-            background: #fff;
-        }
+        /* Top Layout Header & Navigation Tabs */
+        .header { padding: 20px 20px 10px 20px; display: flex; align-items: center; background: #fff; }
+        .logo-badge { background-color: #0f172a; color: white; font-weight: 800; padding: 6px 10px; border-radius: 6px; font-size: 14px; margin-right: 12px; }
+        .app-title { font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #000; }
 
-        .logo-badge {
-            background-color: #0f172a;
-            color: white;
-            font-weight: 800;
-            padding: 6px 10px;
-            border-radius: 6px;
-            font-size: 14px;
-            letter-spacing: 0.5px;
-            margin-right: 12px;
-        }
+        .nav-tabs { display: flex; background: #fff; border-bottom: 2px solid var(--border-color); }
+        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px 0; font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; }
+        .tab-item.active { color: var(--primary-blue); border-bottom: 3px solid var(--primary-blue); background: #f8fafc; }
+        .tab-item svg { width: 22px; height: 22px; margin-bottom: 4px; fill: none; stroke: currentColor; stroke-width: 2; }
 
-        .app-title {
-            font-size: 20px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #000;
-        }
+        .page-title-bar { padding: 14px 20px; display: flex; align-items: center; background: #fff; border-bottom: 1px solid var(--border-color); }
+        .back-btn { background: none; border: none; cursor: pointer; margin-right: 12px; display: flex; align-items: center; }
+        .page-heading { font-size: 16px; font-weight: 700; text-transform: uppercase; }
 
-        .nav-tabs {
-            display: flex;
-            background: #fff;
-            border-bottom: 2px solid var(--border-color);
-        }
+        /* Rooms Grid Layout */
+        .rooms-grid { padding: 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .room-card { background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; padding: 22px 10px; text-align: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .room-number { font-size: 20px; font-weight: 800; margin-bottom: 8px; color: #000; }
 
-        .tab-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 12px 0;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-decoration: none;
-            cursor: pointer;
-        }
+        .room-status { font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }
+        
+        .spinner { border: 2px solid rgba(0, 0, 0, 0.1); border-top: 2px solid var(--primary-blue); border-radius: 50%; width: 12px; height: 12px; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .tab-item svg {
-            width: 22px;
-            height: 22px;
-            margin-bottom: 4px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2;
-        }
-
-        .tab-item.active {
-            color: var(--primary-blue);
-            border-bottom: 3px solid var(--primary-blue);
-            margin-bottom: -2px;
-            background: #f8fafc;
-        }
-
-        /* Subheader page title with back indicator button */
-        .page-title-bar {
-            padding: 14px 20px;
-            display: flex;
-            align-items: center;
-            background: #fff;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .back-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            margin-right: 12px;
-            display: flex;
-            align-items: center;
-        }
-
-        .page-heading {
-            font-size: 16px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-
-        /* Rooms Matrix Grid Layout */
-        .rooms-grid {
-            padding: 20px;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-        }
-
-        .room-card {
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            padding: 22px 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-        }
-
-        .room-number {
-            font-size: 20px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            color: #000;
-        }
-
-        .room-status {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 4px 12px;
-            border-radius: 20px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            min-height: 24px;
-        }
-
-        /* Circling Loading Animation Keyframes */
-        .spinner {
-            border: 2px solid rgba(0, 0, 0, 0.1);
-            border-top: 2px solid var(--primary-blue);
-            border-radius: 50%;
-            width: 12px;
-            height: 12px;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Dynamic Status Background Highlights */
+        /* Dynamic Status Colors */
         .status-loading { background: #f3f4f6; color: var(--text-muted); }
         .status-available { background: #e0f2fe; color: var(--primary-blue); }
         .status-reserved { background: #fef3c7; color: var(--warning-orange); }
-        .status-checkedin { background: #fee2e2; color: var(--occupied-red); }
+        .status-stayback { background: #fee2e2; color: var(--occupied-red); }
+        .status-checkout-pending { background: #ffedd5; color: #ea580c; border: 1px dashed #ea580c; }
 
-        /* Modal Layout Structures */
-        .modal-bg {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            padding: 20px;
-        }
-
-        .modal {
-            background: #fff;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .modal-title {
-            font-size: 18px;
-            font-weight: 800;
-            margin-bottom: 16px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 8px;
-        }
-
-        .guest-details-box {
-            background: #f8fafc;
-            padding: 14px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-size: 14px;
-            line-height: 1.6;
-            border: 1px solid var(--border-color);
-        }
-
-        .action-btn {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            border: none;
-            transition: background 0.2s;
-            margin-top: 8px;
-        }
-
+        /* Modals */
+        .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+        .modal { background: #fff; border-radius: 16px; padding: 24px; width: 100%; max-width: 400px; }
+        .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .guest-details-box { background: #f8fafc; padding: 14px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; line-height: 1.6; border: 1px solid var(--border-color); }
+        .action-btn { width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; margin-top: 8px; }
         .btn-checkin { background: var(--success-green); color: white; }
         .btn-walkin { background: var(--primary-blue); color: white; }
         .btn-cancel { background: #e5e7eb; color: var(--text-main); }
-
-        .modal input {
-            width: 100%;
-            padding: 10px 12px;
-            margin-bottom: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 14px;
-        }
+        .modal input { width: 100%; padding: 10px 12px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -299,25 +108,21 @@
         </div>
 
         <div class="rooms-grid" id="roomsContainer">
-            </div>
+            <!-- Rooms render instantly -->
+        </div>
     </div>
 
     <div id="roomModalBg" class="modal-bg" style="display: none;">
-        <div class="modal" id="modalContent">
-            </div>
+        <div class="modal" id="modalContent"></div>
     </div>
 
     <script>
-        // Formats current local system date accurately as YYYY-MM-DD
-        const todayStr = new Date().toLocaleDateString('sv');
+        // Use system tracking date cleanly
+        const todayStr = new Date().toLocaleDateString('sv'); // YYYY-MM-DD
 
-        // Explicit Room Configuration Keys
         const customRoomsList = ["A-1", "Twin-1", "Twin-2", "Paddy", "P-1", "P-2", "Delux"];
         let roomsState = {}; 
 
-        // ----------------------------------------------------
-        // FIREBASE INSTANCE INITIALIZATIONS
-        // ----------------------------------------------------
         const appCS1 = firebase.initializeApp({
             apiKey: "AIzaSyCebk_0DBBu5w0cvWP0lUKqQanmiwoC42U",
             authDomain: "booking-25ba4.firebaseapp.com",
@@ -332,11 +137,9 @@
         }, "cs2");
         const dbCS2 = firebase.firestore(appCS2);
 
-        // Preload layout blocks instantly before executing background database reading operations
         function preloadRoomsLayout() {
             const container = document.getElementById('roomsContainer');
             container.innerHTML = '';
-
             customRoomsList.forEach(roomName => {
                 roomsState[roomName] = { status: 'Loading', data: null, cs2DocId: null };
                 container.innerHTML += `
@@ -348,49 +151,61 @@
                     </div>
                 `;
             });
-            
-            // Execute background state calculations
-            fetchActiveRoomStatuses();
+            fetchAllRoomsParallel();
         }
 
-        // Evaluate conditions asynchronously and swap out animation badges on resolution
-        async function fetchActiveRoomStatuses() {
-            for (let roomName of customRoomsList) {
-                try {
-                    // Step A: Evaluate Live Active Check-Ins within Operational Billing Node (CS2)
-                    let cs2Snap = await dbCS2.collection('active_stays').where('roomNo', '==', roomName).get();
-                    
-                    if (!cs2Snap.empty) {
-                        updateRoomUIState(roomName, 'CheckedIn', cs2Snap.docs[0].data(), cs2Snap.docs[0].id);
-                        continue;
-                    }
+        function fetchAllRoomsParallel() {
+            const roomPromises = customRoomsList.map(roomName => checkSingleRoomStatus(roomName));
+            Promise.all(roomPromises).catch(err => console.error(err));
+        }
 
-                    // Step B: Evaluate Pre-booked entries logged on current date string inside CS1
-                    let cs1Snap = await dbCS1.collection('bookings')
-                                             .where('roomNo', '==', roomName)
-                                             .where('checkin', '==', todayStr).get();
-                    
-                    if (!cs1Snap.empty) {
-                        updateRoomUIState(roomName, 'Reserved', cs1Snap.docs[0].data(), null);
+        async function checkSingleRoomStatus(roomName) {
+            try {
+                // 1. Get ALL active stays for this specific room to verify date spans
+                let cs2Snap = await dbCS2.collection('active_stays').where('roomNo', '==', roomName).get();
+                
+                if (!cs2Snap.empty) {
+                    let stayData = cs2Snap.docs[0].data();
+                    let docId = cs2Snap.docs[0].id;
+                    let checkoutDate = stayData.checkoutDate; // Must be stored in YYYY-MM-DD when checking in
+
+                    if (checkoutDate === todayStr) {
+                        // Checkout is today! Pending action alert state.
+                        updateRoomUIState(roomName, 'CheckoutPending', stayData, docId);
                     } else {
-                        updateRoomUIState(roomName, 'Available', null, null);
+                        // Standard longer multi-day Stay Back
+                        updateRoomUIState(roomName, 'StayBack', stayData, docId);
                     }
-                } catch (error) {
-                    console.error("Database resolution error on room: " + roomName, error);
+                    return; // Skip checking CS1 entirely
+                }
+
+                // 2. If room is operationally empty, verify active reservations for today in CS1
+                let cs1Snap = await dbCS1.collection('bookings')
+                                         .where('roomNo', '==', roomName)
+                                         .where('checkin', '==', todayStr).get();
+                
+                if (!cs1Snap.empty) {
+                    updateRoomUIState(roomName, 'Reserved', cs1Snap.docs[0].data(), null);
+                } else {
                     updateRoomUIState(roomName, 'Available', null, null);
                 }
+            } catch (error) {
+                updateRoomUIState(roomName, 'Available', null, null);
             }
         }
 
-        // Injects resolved values directly into the DOM blocks
         function updateRoomUIState(roomName, status, data, docId) {
             roomsState[roomName] = { status: status, data: data, cs2DocId: docId };
             const badge = document.getElementById(`status-${roomName}`);
+            if (!badge) return;
             
             badge.className = 'room-status'; 
-            if (status === 'CheckedIn') {
-                badge.classList.add('status-checkedin');
-                badge.innerHTML = 'Occupied';
+            if (status === 'StayBack') {
+                badge.classList.add('status-stayback');
+                badge.innerHTML = 'Stay Back';
+            } else if (status === 'CheckoutPending') {
+                badge.classList.add('status-checkout-pending');
+                badge.innerHTML = '⚠️ Checkout';
             } else if (status === 'Reserved') {
                 badge.classList.add('status-reserved');
                 badge.innerHTML = 'Pre-Booked';
@@ -404,24 +219,25 @@
             const room = roomsState[roomName];
             if (room.status === 'Loading') return;
 
+            // REDIRECT ROUTER: Send occupied rooms straight to checkout.html layout
+            if (room.status === 'StayBack' || room.status === 'CheckoutPending') {
+                window.location.href = `checkout.html?room=${encodeURIComponent(roomName)}&stayId=${room.cs2DocId}`;
+                return;
+            }
+
             const modalBg = document.getElementById('roomModalBg');
             const modalContent = document.getElementById('modalContent');
             modalBg.style.display = 'flex';
-
-            if (room.status === 'CheckedIn') {
-                window.location.href = `addbill.html?room=${encodeURIComponent(roomName)}&stayId=${room.cs2DocId}`;
-                return;
-            }
 
             if (room.status === 'Reserved') {
                 modalContent.innerHTML = `
                     <div class="modal-title">Pre-Booked Arrival (${roomName})</div>
                     <div class="guest-details-box">
                         <b>Guest Name:</b> ${room.data.name}<br>
-                        <b>Phone No:</b> ${room.data.phone}<br>
-                        <b>Advance Paid:</b> ₹${room.data.advance || 0}<br>
-                        <b>Total Cost:</b> ₹${room.data.total || 0}
+                        <b>Phone:</b> ${room.data.phone}<br>
+                        <b>Total:</b> ₹${room.data.total || 0}
                     </div>
+                    <input type="date" id="reserveCheckoutDate" value="${room.data.checkout || ''}" style="width:100%; padding:10px; margin-bottom:12px; border:1px solid var(--border-color); border-radius:8px;">
                     <button class="action-btn btn-checkin" onclick="processCheckIn('${roomName}', 'owner')">Confirm Check-In</button>
                     <button class="action-btn btn-cancel" onclick="closeModal()">Close</button>
                 `;
@@ -432,6 +248,8 @@
                     <input type="text" id="walkInPhone" placeholder="Phone Number" required>
                     <input type="number" id="walkInTotal" placeholder="Total Amount" required>
                     <input type="number" id="walkInAdvance" placeholder="Advance Paid" required>
+                    <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">Expected Check-Out Date:</label>
+                    <input type="date" id="walkInCheckoutDate" required>
                     <button class="action-btn btn-walkin" onclick="saveWalkInAndCheckIn('${roomName}')">Save & Check-In</button>
                     <button class="action-btn btn-cancel" onclick="closeModal()">Cancel</button>
                 `;
@@ -440,19 +258,20 @@
 
         function processCheckIn(roomName, creatorType) {
             const roomData = roomsState[roomName].data;
+            const checkoutDate = document.getElementById('reserveCheckoutDate').value;
+            if(!checkoutDate) { alert("Please select a checkout date."); return; }
+
             dbCS2.collection('active_stays').add({
                 roomNo: roomName,
                 name: roomData.name,
                 phone: roomData.phone,
                 total: parseFloat(roomData.total),
-                advance: parseFloat(roomData.advance),
-                balance: parseFloat(roomData.total) - parseFloat(roomData.advance),
+                advance: parseFloat(roomData.advance || 0),
+                balance: parseFloat(roomData.total) - parseFloat(roomData.advance || 0),
                 checkinDate: todayStr,
+                checkoutDate: checkoutDate,
                 createdBy: creatorType
-            }).then(() => {
-                closeModal();
-                preloadRoomsLayout();
-            });
+            }).then(() => { closeModal(); preloadRoomsLayout(); });
         }
 
         function saveWalkInAndCheckIn(roomName) {
@@ -460,37 +279,20 @@
             const phone = document.getElementById('walkInPhone').value.trim();
             const total = parseFloat(document.getElementById('walkInTotal').value) || 0;
             const advance = parseFloat(document.getElementById('walkInAdvance').value) || 0;
+            const checkoutDate = document.getElementById('walkInCheckoutDate').value;
 
-            if (!name || !phone) { alert("Please fill name and phone fields."); return; }
+            if (!name || !phone || !checkoutDate) { alert("Please fill all required fields."); return; }
 
             dbCS1.collection('bookings').add({
-                roomNo: roomName,
-                name: name,
-                phone: phone,
-                total: total,
-                advance: advance,
-                checkin: todayStr,
-                createdBy: 'staff'
+                roomNo: roomName, name: name, phone: phone, total: total, advance: advance, checkin: todayStr, checkout: checkoutDate, createdBy: 'staff'
             }).then(() => {
                 return dbCS2.collection('active_stays').add({
-                    roomNo: roomName,
-                    name: name,
-                    phone: phone,
-                    total: total,
-                    advance: advance,
-                    balance: total - advance,
-                    checkinDate: todayStr,
-                    createdBy: 'staff'
+                    roomNo: roomName, name: name, phone: phone, total: total, advance: advance, balance: total - advance, checkinDate: todayStr, checkoutDate: checkoutDate, createdBy: 'staff'
                 });
-            }).then(() => {
-                closeModal();
-                preloadRoomsLayout();
-            });
+            }).then(() => { closeModal(); preloadRoomsLayout(); });
         }
 
         function closeModal() { document.getElementById('roomModalBg').style.display = 'none'; }
-
-        // Start initialization process on view mount
         window.onload = preloadRoomsLayout;
     </script>
 </body>

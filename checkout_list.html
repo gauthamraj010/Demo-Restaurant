@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Stays List - 1(g)</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --bg-color: #f4f5f7;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --primary-blue: #2563eb;
+            --warning-orange: #ea580c;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-color); display: flex; justify-content: center; padding: 20px; }
+        
+        .web-app-container {
+            width: 100%; max-width: 480px; background: #fff; min-height: 85vh;
+            border-radius: 16px; border: 1px solid var(--border-color); padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column;
+        }
+        .header { display: flex; align-items: center; margin-bottom: 20px; }
+        .back-btn { background: none; border: none; cursor: pointer; margin-right: 12px; display: flex; align-items: center; }
+        h2 { font-size: 20px; font-weight: 800; text-transform: uppercase; }
+        
+        .list-container { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+        .stay-card { background: #fff; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.01); }
+        .stay-info h3 { font-size: 18px; font-weight: 800; color: #000; margin-bottom: 4px; }
+        .stay-info p { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+        
+        .checkout-link-btn { background: var(--primary-blue); color: white; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; transition: background 0.2s; }
+        .checkout-link-btn:hover { background: #1d4ed8; }
+        .empty-msg { text-align: center; color: var(--text-muted); font-size: 14px; margin-top: 40px; }
+        .alert-dot { color: var(--warning-orange); font-weight: 800; }
+    </style>
+</head>
+<body>
+
+    <div class="web-app-container">
+        <div class="header">
+            <button class="back-btn" onclick="window.location.href='index.html'">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <h2>Checkout Menu</h2>
+        </div>
+
+        <div id="loadingText" style="text-align:center; color:gray; margin-top:30px;">Scanning active stays...</div>
+        <div class="list-container" id="activeStaysList"></div>
+    </div>
+
+    <script>
+        const todayStr = new Date().toLocaleDateString('sv'); 
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCebk_0DBBu5w0cvWP0lUKqQanmiwoC42U",
+            authDomain: "booking-25ba4.firebaseapp.com",
+            projectId: "booking-25ba4"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        async function populateCheckoutList() {
+            try {
+                const listContainer = document.getElementById('activeStaysList');
+                listContainer.innerHTML = '';
+                
+                // Get only currently checked-in files
+                let snap = await db.collection('bookings').where('checkedIn', '==', true).get();
+                
+                document.getElementById('loadingText').style.display = 'none';
+
+                if (snap.empty) {
+                    listContainer.innerHTML = `<div class="empty-msg">No active occupants checked in currently.</div>`;
+                    return;
+                }
+
+                snap.forEach(doc => {
+                    let data = doc.data();
+                    let id = doc.id;
+                    let isCheckoutToday = (data.checkout === todayStr);
+
+                    listContainer.innerHTML += `
+                        <div class="stay-card">
+                            <div class="stay-info">
+                                <h3>Room ${data.roomNo} ${isCheckoutToday ? '<span class="alert-dot">⚠️</span>' : ''}</h3>
+                                <p><b>Guest:</b> ${data.name}</p>
+                                <p><b>Out Date:</b> ${data.checkout || 'Not specified'}</p>
+                            </div>
+                            <a href="checkout.html?room=${encodeURIComponent(data.roomNo)}&stayId=${id}" class="checkout-link-btn">Checkout</a>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                document.getElementById('loadingText').innerText = "Failed to load check-out records.";
+            }
+        }
+
+        window.onload = populateCheckoutList;
+    </script>
+</body>
+</html>

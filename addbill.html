@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create New Bill - Demo Resort</title>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <style>
         :root {
             --bg-color: #f4f5f7;
@@ -93,7 +93,7 @@
                 <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
                 Add bill
             </div>
-            <div class="tab-item" onclick="window.location.href='pending.html'">
+            <div class="tab-item" onclick="window.location.href='pendingorder.html'">
                 <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 Pending Orders
             </div>
@@ -166,12 +166,15 @@
         const firebaseConfig = {
             apiKey: "AIzaSyBNXgwgzr579prCiMl72QFa8qCIw7ZwihI",
             authDomain: "wild-sapiens-station.firebaseapp.com",
-            projectId: "wild-sapiens-station"
+            projectId: "wild-sapiens-station",
+            storageBucket: "wild-sapiens-station.firebasestorage.app",
+            messagingSenderId: "758377996842",
+            appId: "1:758377996842:web:aa8a45807902a94ebf9953"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Hardcoded target layout array list matching your resort exactly
+        // Standard rooms configuration matrix
         const staticResortRooms = ["101", "102", "103", "104", "201", "202", "Twin-1", "Twin-2"];
         let systemActiveBookings = [];
         
@@ -194,18 +197,22 @@
                         systemActiveBookings.push({ id: doc.id, ...data });
                     }
                 });
+            } catch (err) {
+                console.log("Bookings snapshot read error bypassed: ", err);
+            }
 
+            try {
                 // Fetch food menu items from database
                 let menuSnap = await db.collection('menuItems').get();
                 let menuItems = [];
                 menuSnap.forEach(doc => menuItems.push({ id: doc.id, ...doc.data() }));
-
-                renderRoomMatrixGrid();
                 buildFoodMenuLayout(menuItems);
-            } catch (err) {
-                console.error(err);
-                document.getElementById('loadingWorkspaceText').innerText = "Database connection offline.";
+            } catch(err) {
+                console.log("Menu snapshot read error bypassed: ", err);
             }
+
+            // Always display rooms grid regardless of data status
+            renderRoomMatrixGrid();
         }
 
         function renderRoomMatrixGrid() {
@@ -221,8 +228,7 @@
                 let stayToken = '';
 
                 if (activeOccupant) {
-                    // Check if they are pre-booked or checked in
-                    if (activeOccupant.checkedIn === "In-House" || activeOccupant.checkedIn === true) {
+                    if (activeOccupant.checkedIn === "In-House" || activeOccupant.checkedIn === true || activeOccupant.checkedIn === "Checked-In") {
                         statusClass = 'status-stayback';
                         labelText = 'Stay Back';
                         guestName = activeOccupant.name;

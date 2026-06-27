@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guest Checkout - 1(h)</title>
+    <!-- Firebase Compatible Module -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <style>
@@ -16,21 +17,33 @@
             --success-green: #10b981;
             --text-muted: #6b7280;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-color); display: flex; justify-content: center; padding: 20px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: start; min-height: 100vh; padding: 20px; }
         
         .web-app-container {
-            width: 100%; max-width: 480px; background: #fff; min-height: 85vh;
-            border-radius: 16px; border: 1px solid var(--border-color); padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            display: flex; flex-direction: column;
+            width: 100%; max-width: 480px; background: #fcfcfd; min-height: 85vh;
+            border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; overflow: hidden;
         }
-        .header { display: flex; align-items: center; margin-bottom: 24px; }
+        
+        /* App Header and Navigation Tabs */
+        .header { padding: 20px 20px 10px 20px; display: flex; align-items: center; background: #fff; }
+        .logo-badge { background-color: #0f172a; color: white; font-weight: 800; padding: 6px 10px; border-radius: 6px; font-size: 14px; margin-right: 12px; }
+        .app-title { font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #000; }
+
+        .nav-tabs { display: flex; background: #fff; border-bottom: 2px solid var(--border-color); }
+        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px 0; font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; cursor: pointer; }
+        .tab-item.active { color: var(--primary-blue); border-bottom: 3px solid var(--primary-blue); background: #f8fafc; }
+        .tab-item svg { width: 22px; height: 22px; margin-bottom: 4px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+        .page-title-bar { padding: 14px 20px; display: flex; align-items: center; background: #fff; border-bottom: 1px solid var(--border-color); }
         .back-btn { background: none; border: none; cursor: pointer; margin-right: 12px; display: flex; align-items: center; }
-        h2 { font-size: 20px; font-weight: 800; }
+        .page-heading { font-size: 16px; font-weight: 700; text-transform: uppercase; }
         
         #loadingMessage { font-size: 14px; color: var(--text-muted); text-align: center; margin: 40px 0; }
         
+        /* Information Summary Elements */
+        .content-body { padding: 20px; }
         .detail-card { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 20px; line-height: 1.8; }
         .highlight-balance { font-size: 18px; font-weight: 800; color: #ea580c; margin-top: 8px; }
         
@@ -38,25 +51,50 @@
         .form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
         .form-select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; background-color: #fff; font-weight: 600; }
         
-        .action-btn { width: 100%; padding: 14px; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; border: none; text-align: center; color: white; background: var(--success-green); transition: background 0.2s; }
-        .action-btn:hover { background: #059669; }
+        .action-btn { width: 100%; padding: 14px; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; border: none; text-align: center; color: white; background: var(--success-green); }
     </style>
 </head>
 <body>
 
     <div class="web-app-container">
-        <div class="header">
+        <!-- Main Header Blueprint Layout -->
+        <header class="header">
+            <div class="logo-badge">DR</div>
+            <h1 class="app-title">Demo Resort</h1>
+        </header>
+
+        <!-- Standard Universal Navigation Menu -->
+        <nav class="nav-tabs">
+            <div class="tab-item" onclick="window.location.href='index.html'">
+                <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Dashboard
+            </div>
+            <div class="tab-item" onclick="window.location.href='addbill.html'">
+                <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+                New bill
+            </div>
+            <div class="tab-item" onclick="window.location.href='viewbill.html'">
+                <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                View bill
+            </div>
+            <div class="tab-item">
+                <svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                Account
+            </div>
+        </nav>
+
+        <div class="page-title-bar">
             <button class="back-btn" onclick="window.location.href='room_details.html'">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             </button>
-            <h2>Room Checkout</h2>
+            <h2 class="page-heading">Room Checkout</h2>
         </div>
 
         <div id="loadingMessage">Loading active stay files...</div>
         
-        <div id="checkoutContent" style="display:none;">
+        <div id="checkoutContent" class="content-body" style="display:none;">
             <div class="detail-card">
-                <h3 id="roomTitle" style="margin-bottom:12px; font-size: 22px; font-weight: 800;">Room: </h3>
+                <h3 id="roomTitle" style="margin-bottom:12px; font-size: 20px; font-weight: 800;">Room: </h3>
                 <p><b>Guest Name:</b> <span id="gName"></span></p>
                 <p><b>Phone:</b> <span id="gPhone"></span></p>
                 <p><b>Check-In Date:</b> <span id="gCheckin"></span></p>
@@ -99,7 +137,7 @@
 
         async function loadStayDetails() {
             if (!stayId) {
-                document.getElementById('loadingMessage').innerText = "Error: Invalid link pointer.";
+                document.getElementById('loadingMessage').innerText = "Error: Invalid link parameters.";
                 return;
             }
             try {
@@ -140,7 +178,7 @@
                     checkedIn: 'Completed'
                 });
 
-                // 2. Automatically write record to your 'transactions' balance ledger
+                // 2. Automatically write record to your 'transactions' balance sheet ledger
                 await db.collection('transactions').add({
                     bookingId: stayId,
                     roomNo: globalStayData.roomNo,
@@ -152,7 +190,7 @@
                     recordedBy: "owner"
                 });
 
-                // 3. Create the text receipt payload
+                // 3. Create the text receipt layout string
                 const receiptMessage = `*VINTAGE GARDEN RESORT*\n` +
                                        `-----------------------------\n` +
                                        `*Room No:* ${globalStayData.roomNo}\n` +
@@ -165,9 +203,9 @@
                                        `*Balance Paid:* ₹${calculatedBalance}\n` +
                                        `*Payment Mode:* ${selectedMode}\n\n` +
                                        `Status: *Paid & Settled* ✅\n\n` +
-                                       `Thank you for visiting! Have a safe journey home. ✨`;
+                                       `Thank you for staying with us! ✨`;
 
-                // 4. Fire Native Share pop-up (WhatsApp/Email)
+                // 4. Open Mobile Share popup sheet (WhatsApp/Email)
                 if (navigator.share) {
                     try {
                         await navigator.share({
@@ -176,11 +214,10 @@
                         });
                         window.location.href = 'room_details.html';
                     } catch(err) {
-                        // If sharing window closed, head back cleanly anyway
                         window.location.href = 'room_details.html';
                     }
                 } else {
-                    // Direct browser link fallback for desktop computers
+                    // Direct link fallback for desktop browsers
                     window.open(`https://api.whatsapp.com/send?phone=${globalStayData.phone}&text=${encodeURIComponent(receiptMessage)}`, '_blank');
                     window.location.href = 'room_details.html';
                 }

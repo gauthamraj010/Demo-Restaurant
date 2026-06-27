@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create New Bill - Demo Resort</title>
-    <!-- Firebase Module Dependencies -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <style>
@@ -116,7 +115,6 @@
             <div id="roomSelectionWorkspace" class="room-matrix-grid"></div>
             <div id="loadingWorkspaceText" class="status-msg">Scanning resort layout records...</div>
 
-            <!-- Food Bill Subspace Options -->
             <div id="foodBillWorkspace" style="display:none;">
                 <button class="category-button" onclick="toggleMenuCategory('beverages')">Beverages</button>
                 <div id="beverages" class="menu-section"><div class="menu-list"></div></div>
@@ -134,7 +132,6 @@
                 <button class="btn-submit-main" onclick="compileFoodBillOrder()">Add Bill</button>
             </div>
 
-            <!-- Extra Miscellaneous Service Charge Fields -->
             <div id="extraBillWorkspace" style="display:none;">
                 <div class="form-group">
                     <label>Bill Name / Particular Description</label>
@@ -148,7 +145,6 @@
             </div>
         </div>
 
-        <!-- Workflow router popup overlay window -->
         <div class="modal-overlay" id="workflowSplitModal">
             <div class="modal-box">
                 <h3 class="modal-title" id="splitModalTitle">Room Options</h3>
@@ -158,7 +154,6 @@
             </div>
         </div>
 
-        <!-- Order verification dialog frame -->
         <div class="modal-overlay" id="orderConfirmationModal">
             <div class="modal-box">
                 <h3 class="modal-title">Confirm Bill Details</h3>
@@ -177,7 +172,7 @@
         let roomsState = {};
 
         // -------------------------------------------------------------
-        // INITIALIZE DB 1 (Room Bookings - booking-25ba4)
+        // CS1: Room Bookings Database (booking-25ba4)
         // -------------------------------------------------------------
         const roomApp = firebase.initializeApp({
             apiKey: "AIzaSyCebk_0DBBu5w0cvWP0lUKqQanmiwoC42U",
@@ -187,7 +182,7 @@
         const roomDb = firebase.firestore(roomApp);
 
         // -------------------------------------------------------------
-        // INITIALIZE DB 2 (Menu & Order logs - wild-sapiens-station)
+        // CS2: Food Menu & Restaurant Orders Database (wild-sapiens-station)
         // -------------------------------------------------------------
         const billingApp = firebase.initializeApp({
             apiKey: "AIzaSyBNXgwgzr579prCiMl72QFa8qCIw7ZwihI",
@@ -209,12 +204,9 @@
         let activeCompiledPayload = {};
 
         function initAppWorkspace() {
-            // Pre-populate container state
             customRoomsList.forEach(roomName => {
                 roomsState[roomName] = { status: 'Loading', data: null, docId: null };
             });
-            
-            // Fire layout scans
             fetchRoomStatusesParallel();
             fetchFoodMenuItems();
         }
@@ -228,7 +220,6 @@
 
         async function checkSingleRoomStatus(roomName) {
             try {
-                // Exactly mirrors your logic from room_details.html
                 let activeSnap = await roomDb.collection('bookings')
                                          .where('roomNo', '==', roomName)
                                          .where('checkedIn', '==', true).get();
@@ -419,7 +410,7 @@
                 items: itemsSummaryArray,
                 amount: costVal,
                 status: "Pending",
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                timestamp: new Date().toISOString() // Bypasses internal cross-project database verification structural blocks
             };
 
             document.getElementById('orderConfirmationSummaryText').innerText = `ROOM: ${selectedRoomNo}\nCATEGORY: Food Bill\n----------------------\n${listString}\n----------------------\nGRAND TOTAL: ₹${costVal}`;
@@ -443,7 +434,7 @@
                 particular: txtTitle,
                 amount: numAmt,
                 status: "Pending",
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                timestamp: new Date().toISOString() // Bypasses internal cross-project database verification structural blocks
             };
 
             document.getElementById('orderConfirmationSummaryText').innerText = `ROOM: ${selectedRoomNo}\nCATEGORY: Extra Service\n----------------------\nService: ${txtTitle}\nCharge Amount: ₹${numAmt}\n----------------------\nGRAND TOTAL: ₹${numAmt}`;
@@ -452,7 +443,7 @@
 
         async function writeBillRecordToDatabase() {
             try {
-                // Saves directly to wild-sapiens-station restaurantOrders collection
+                // Saves cleanly to wild-sapiens-station restaurantOrders collection
                 await billingDb.collection('restaurantOrders').add(activeCompiledPayload);
                 alert("Bill added successfully!");
                 window.location.href = 'index.html';

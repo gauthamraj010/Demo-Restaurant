@@ -26,12 +26,10 @@
             display: flex; flex-direction: column; overflow: hidden; position: relative;
         }
         
-        /* Unified Header Branding UI */
         .header { padding: 20px 20px 10px 20px; display: flex; align-items: center; background: #fff; }
         .logo-badge { background-color: #0f172a; color: white; font-weight: 800; padding: 6px 10px; border-radius: 6px; font-size: 14px; margin-right: 12px; }
         .app-title { font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #000; }
 
-        /* Unified Top Navigation Strip Bar */
         .nav-tabs { display: flex; background: #fff; border-bottom: 2px solid var(--border-color); }
         .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px 0; font-size: 11px; font-weight: 600; color: var(--text-muted); text-decoration: none; cursor: pointer; text-align: center; }
         .tab-item.active { color: var(--primary-blue); border-bottom: 3px solid var(--primary-blue); background: #f8fafc; }
@@ -43,18 +41,15 @@
         .content-workspace { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
         .status-msg { text-align: center; color: var(--text-muted); font-size: 14px; margin-top: 30px; }
 
-        /* Step 1: Grid View for Room Matrix Blocks */
         .room-matrix-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .room-block-card { background: white; border: 2px solid var(--border-color); border-radius: 12px; padding: 16px; cursor: pointer; position: relative; transition: all 0.2s; }
         .room-block-card h3 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
         .room-block-card p { font-size: 12px; font-weight: 600; }
         
-        /* Dynamic Border Status Coloring Badges */
         .status-stayback { border-color: var(--success-green); background: #f0fdf4; }
         .status-prebooked { border-color: var(--primary-blue); background: #eff6ff; }
         .status-available { border-color: #d1d5db; background: #f9fafb; }
 
-        /* Step 2 & Confirmations: Popups/Mini Modals Windows */
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
         .modal-box { background: white; width: 100%; max-width: 360px; border-radius: 16px; padding: 20px; box-shadow: 0 20px 25px rgba(0,0,0,0.15); }
         .modal-title { font-size: 15px; font-weight: 800; text-transform: uppercase; margin-bottom: 16px; text-align: center; }
@@ -66,7 +61,6 @@
         .btn-m-confirm { background: var(--success-green); color: white; }
         .btn-m-cancel { background: #e5e7eb; color: var(--text-main); }
 
-        /* Step 3: Food Bill Template Matching Stylesheet */
         .category-button { display: block; width: 100%; margin-bottom: 8px; padding: 12px; font-size: 15px; font-weight: 700; background-color: #3498db; color: white; border: none; cursor: pointer; border-radius: 8px; text-transform: uppercase; }
         .menu-section { display: none; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
         .menu-section h2 { font-size: 14px; text-transform: uppercase; margin-bottom: 8px; color: var(--text-muted); }
@@ -77,7 +71,6 @@
         #totalBillSummary { font-size: 18px; font-weight: 800; text-align: right; margin: 14px 0; color: var(--text-main); }
         .btn-submit-main { background-color: var(--success-green); color: white; padding: 14px; border: none; font-size: 15px; font-weight: 700; width: 100%; cursor: pointer; border-radius: 8px; text-transform: uppercase; }
 
-        /* Step 3: Extra Service Form Configuration Input Fields */
         .form-group { margin-bottom: 14px; }
         .form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
         .form-input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; font-weight: 600; background: #fff; }
@@ -170,7 +163,6 @@
     </div>
 
     <script>
-        // Production initialization parameters
         const firebaseConfig = {
             apiKey: "AIzaSyBNXgwgzr579prCiMl72QFa8qCIw7ZwihI",
             authDomain: "wild-sapiens-station.firebaseapp.com",
@@ -179,30 +171,34 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Runtime variables
         let systemRoomList = [];
         let systemActiveBookings = [];
         
         let selectedRoomNo = null;
         let selectedStayId = null;
-        let selectedBillingType = null; // 'food' or 'extra'
+        let selectedBillingType = null;
 
-        // Food Menu state variables mapped from template
         let prices = {};
         let quantities = {};
         let idToName = {};
         let activeCompiledPayload = {};
 
-        // 1. Core Sync Bootstrap
         async function fetchResortLayoutConfiguration() {
             try {
+                // Fetching static rooms setup
                 let roomsSnap = await db.collection('rooms').get();
                 roomsSnap.forEach(doc => systemRoomList.push({ id: doc.id, ...doc.data() }));
 
-                let bookingSnap = await db.collection('bookings').where('checkedIn', '==', true).get();
-                bookingSnap.forEach(doc => systemActiveBookings.push({ id: doc.id, ...doc.data() }));
+                // FIXED: Fetching all active checked-in bookings by resolving your document strings
+                let bookingSnap = await db.collection('bookings').get();
+                bookingSnap.forEach(doc => {
+                    let data = doc.data();
+                    // Catch profiles that are checkedIn but not marked fully completed yet
+                    if (data.checkedIn && data.checkedIn !== "Completed") {
+                        systemActiveBookings.push({ id: doc.id, ...data });
+                    }
+                });
 
-                // Read food categories menu straight from live menuItems storage 
                 let menuSnap = await db.collection('menuItems').get();
                 let menuItems = [];
                 menuSnap.forEach(doc => menuItems.push({ id: doc.id, ...doc.data() }));
@@ -215,14 +211,16 @@
             }
         }
 
-        // 2. Build Room Block States
         function renderRoomMatrixGrid() {
             const grid = document.getElementById('roomSelectionWorkspace');
             grid.innerHTML = '';
             document.getElementById('loadingWorkspaceText').style.display = 'none';
 
+            // Simple room sorting helper if rooms are named numerically or standard strings
+            systemRoomList.sort((a, b) => String(a.name).localeCompare(String(b.name), undefined, {numeric: true}));
+
             systemRoomList.forEach(room => {
-                // Determine layout rules based on booking matches
+                // FIXED: Checking against exact field name mapping 'roomNo'
                 let activeOccupant = systemActiveBookings.find(b => b.roomNo === room.name);
                 let statusClass = 'status-available';
                 let labelText = 'Available';
@@ -234,7 +232,7 @@
                     labelText = 'Stay Back';
                     guestName = activeOccupant.name;
                     stayToken = activeOccupant.id;
-                } else if (room.isPrebooked) { // Pre-booked flag logic verification field
+                } else if (room.isPrebooked) {
                     statusClass = 'status-prebooked';
                     labelText = 'Pre-Booked';
                 }
@@ -243,24 +241,22 @@
                     <div class="room-block-card ${statusClass}" onclick="handleRoomBlockClick('${room.name}', '${labelText}', '${stayToken}')">
                         <h3>Room ${room.name}</h3>
                         <p style="color:var(--text-muted); font-size:11px;">Status: <b>${labelText}</b></p>
-                        ${guestName ? `<p style="margin-top:6px; font-weight:700;">👤 ${guestName}</p>` : ''}
+                        ${guestName ? `<p style="margin-top:6px; font-weight:700; color:#15803d;">👤 ${guestName}</p>` : ''}
                     </div>
                 `;
             });
         }
 
-        // 3. Routing Alert Overlays 
         function handleRoomBlockClick(roomName, statusLabel, stayToken) {
             if (statusLabel === 'Available') {
-                alert("Warning: No booking has been recorded for this room grid option.");
+                alert("No booking");
                 return;
             }
             if (statusLabel === 'Pre-Booked') {
-                alert("Warning: Check-in process not complete for this reservation profiling.");
+                alert("Check-in not complete");
                 return;
             }
 
-            // Route Validated In-House Stay Back Rooms
             selectedRoomNo = roomName;
             selectedStayId = stayToken;
 
@@ -276,7 +272,6 @@
             document.getElementById('viewSectionHeading').innerText = `Room ${selectedRoomNo} › ${billingType === 'food' ? 'Food Order' : 'Extra Bill'}`;
 
             if (billingType === 'food') {
-                // Reset item counters prior to drawing screen layout canvas
                 for (let key in quantities) quantities[key] = 0;
                 document.querySelectorAll('.menu-item span[id$="-qty"]').forEach(el => el.innerText = '0');
                 document.getElementById('totalBillSummary').innerText = "Total Bill: ₹0";
@@ -288,7 +283,6 @@
             }
         }
 
-        // 4. Render Menu Items Layout 
         function buildFoodMenuLayout(menuItems) {
             const categories = ["beverages", "breakfast", "lunch", "dinner"];
             categories.forEach(cat => {
@@ -333,7 +327,6 @@
             }
         }
 
-        // 5. Order Preview Extraction & Database Storage Writes
         function compileFoodBillOrder() {
             let listString = "";
             let costVal = 0;
@@ -349,7 +342,7 @@
             }
 
             if (costVal === 0) {
-                alert("Please add item quantities before requesting compilation.");
+                alert("Please select at least one item to order.");
                 return;
             }
 
@@ -360,6 +353,7 @@
                 summary: listString,
                 items: itemsSummaryArray,
                 amount: costVal,
+                status: "Pending",
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
@@ -372,7 +366,7 @@
             const numAmt = parseInt(document.getElementById('extraBillAmount').value);
 
             if (!txtTitle || !numAmt || numAmt <= 0) {
-                alert("Please declare descriptive entry title tags and valid cash limits.");
+                alert("Please check that both input fields are correctly filled.");
                 return;
             }
 
@@ -383,6 +377,7 @@
                 summary: `${txtTitle}: ₹${numAmt}`,
                 particular: txtTitle,
                 amount: numAmt,
+                status: "Pending",
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
@@ -392,13 +387,12 @@
 
         async function writeBillRecordToDatabase() {
             try {
-                // Save record directly under restaurant orders collection tracking line
+                // Save directly under restaurantOrders collection matching your pipeline
                 await db.collection('restaurantOrders').add(activeCompiledPayload);
-                
-                alert("Transaction logged successfully.");
+                alert("Bill added successfully!");
                 window.location.href = 'index.html';
             } catch (err) {
-                alert("Write request handling fault execution failure: " + err.message);
+                alert("Error adding bill entry: " + err.message);
             }
         }
 

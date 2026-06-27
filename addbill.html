@@ -46,9 +46,9 @@
         .room-block-card h3 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
         .room-block-card p { font-size: 12px; font-weight: 600; }
         
-        .status-stayback { border-color: var(--success-green); background: #f0fdf4; }
-        .status-prebooked { border-color: var(--primary-blue); background: #eff6ff; }
-        .status-available { border-color: #d1d5db; background: #f9fafb; }
+        .status-stayback { border-color: #f87171; background: #fef2f2; } /* Soft red style matching your screenshot */
+        .status-prebooked { border-color: #fef08a; background: #fefce8; } /* Soft yellow style */
+        .status-available { border-color: #bae6fd; background: #f0f9ff; } /* Soft blue style */
 
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
         .modal-box { background: white; width: 100%; max-width: 360px; border-radius: 16px; padding: 20px; box-shadow: 0 20px 25px rgba(0,0,0,0.15); }
@@ -58,7 +58,7 @@
         
         .modal-btn-row { display: flex; gap: 10px; margin-top: 14px; }
         .modal-btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; font-size: 13px; text-align: center; text-transform: uppercase; }
-        .btn-m-confirm { background: var(--success-green); color: white; }
+        .btn-m-confirm { background: #10b981; color: white; }
         .btn-m-cancel { background: #e5e7eb; color: var(--text-main); }
 
         .category-button { display: block; width: 100%; margin-bottom: 8px; padding: 12px; font-size: 15px; font-weight: 700; background-color: #3498db; color: white; border: none; cursor: pointer; border-radius: 8px; text-transform: uppercase; }
@@ -69,7 +69,7 @@
         .quantity-controls button { padding: 4px 10px; font-size: 16px; font-weight: 800; background-color: #ef4444; color: white; border: none; cursor: pointer; margin: 0 5px; border-radius: 4px; }
         .quantity-controls span { width: 24px; display: inline-block; text-align: center; font-size: 15px; }
         #totalBillSummary { font-size: 18px; font-weight: 800; text-align: right; margin: 14px 0; color: var(--text-main); }
-        .btn-submit-main { background-color: var(--success-green); color: white; padding: 14px; border: none; font-size: 15px; font-weight: 700; width: 100%; cursor: pointer; border-radius: 8px; text-transform: uppercase; }
+        .btn-submit-main { background-color: #10b981; color: white; padding: 14px; border: none; font-size: 15px; font-weight: 700; width: 100%; cursor: pointer; border-radius: 8px; text-transform: uppercase; }
 
         .form-group { margin-bottom: 14px; }
         .form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
@@ -93,7 +93,7 @@
                 <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
                 Add bill
             </div>
-            <div class="tab-item" onclick="window.location.href='pendingorder.html'">
+            <div class="tab-item" onclick="window.location.href='pending.html'">
                 <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 Pending Orders
             </div>
@@ -174,8 +174,8 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Standard rooms configuration matrix
-        const staticResortRooms = ["101", "102", "103", "104", "201", "202", "Twin-1", "Twin-2"];
+        // Updated static room list layout to match your real dashboard structure perfectly
+        const staticResortRooms = ["A-1", "Twin-1", "Twin-2", "Paddy", "P-1", "P-2", "Delux"];
         let systemActiveBookings = [];
         
         let selectedRoomNo = null;
@@ -187,31 +187,37 @@
         let idToName = {};
         let activeCompiledPayload = {};
 
+        // Helper function to get today's date formatted as YYYY-MM-DD
+        function getFormattedToday() {
+            let d = new Date();
+            let month = '' + (d.getMonth() + 1);
+            let day = '' + d.getDate();
+            let year = d.getFullYear();
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+            return [year, month, day].join('-');
+        }
+
         async function fetchResortLayoutConfiguration() {
             try {
-                // Fetching active bookings from your live database
+                // Fetching active layout from your real bookings group
                 let bookingSnap = await db.collection('bookings').get();
                 bookingSnap.forEach(doc => {
-                    let data = doc.data();
-                    if (data.checkedIn && data.checkedIn !== "Completed") {
-                        systemActiveBookings.push({ id: doc.id, ...data });
-                    }
+                    systemActiveBookings.push({ id: doc.id, ...doc.data() });
                 });
             } catch (err) {
-                console.log("Bookings snapshot read error bypassed: ", err);
+                console.log("Bookings read error bypassed: ", err);
             }
 
             try {
-                // Fetch food menu items from database
                 let menuSnap = await db.collection('menuItems').get();
                 let menuItems = [];
                 menuSnap.forEach(doc => menuItems.push({ id: doc.id, ...doc.data() }));
                 buildFoodMenuLayout(menuItems);
             } catch(err) {
-                console.log("Menu snapshot read error bypassed: ", err);
+                console.log("Menu items read error bypassed: ", err);
             }
 
-            // Always display rooms grid regardless of data status
             renderRoomMatrixGrid();
         }
 
@@ -220,49 +226,65 @@
             grid.innerHTML = '';
             document.getElementById('loadingWorkspaceText').style.display = 'none';
 
+            let todayStr = getFormattedToday();
+
             staticResortRooms.forEach(roomName => {
-                let activeOccupant = systemActiveBookings.find(b => b.roomNo === roomName);
+                // Find any record matching this room name
+                let roomBookings = systemActiveBookings.filter(b => b.roomNo === roomName);
+                
                 let statusClass = 'status-available';
-                let labelText = 'Available';
+                let labelText = 'AVAILABLE';
                 let guestName = '';
                 let stayToken = '';
 
-                if (activeOccupant) {
-                    if (activeOccupant.checkedIn === "In-House" || activeOccupant.checkedIn === true || activeOccupant.checkedIn === "Checked-In") {
+                if (roomBookings.length > 0) {
+                    // Look for an in-house stay where today's date falls on or after check-in
+                    let currentStay = roomBookings.find(b => b.checkin <= todayStr && b.checkout >= todayStr);
+                    
+                    if (currentStay) {
                         statusClass = 'status-stayback';
-                        labelText = 'Stay Back';
-                        guestName = activeOccupant.name;
-                        stayToken = activeOccupant.id;
+                        labelText = 'STAY BACK';
+                        guestName = currentStay.name || 'In-House';
+                        stayToken = currentStay.id;
                     } else {
-                        statusClass = 'status-prebooked';
-                        labelText = 'Pre-Booked';
+                        // If there is an upcoming booking listed for the room
+                        let upcomingStay = roomBookings.find(b => b.checkin > todayStr);
+                        if (upcomingStay) {
+                            statusClass = 'status-prebooked';
+                            labelText = 'PRE-BOOKED';
+                            guestName = upcomingStay.name || '';
+                        }
                     }
                 }
 
                 grid.innerHTML += `
                     <div class="room-block-card ${statusClass}" onclick="handleRoomBlockClick('${roomName}', '${labelText}', '${stayToken}')">
-                        <h3>Room ${roomName}</h3>
-                        <p style="color:var(--text-muted); font-size:11px;">Status: <b>${labelText}</b></p>
-                        ${guestName ? `<p style="margin-top:6px; font-weight:700; color:#15803d;">👤 ${guestName}</p>` : ''}
+                        <h3 style="font-size: 20px;">${roomName}</h3>
+                        <div style="margin-top: 8px;">
+                            <span style="font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 20px; background: rgba(0,0,0,0.05); color: #374151;">
+                                ${labelText}
+                            </span>
+                        </div>
+                        ${guestName && labelText === 'STAY BACK' ? `<p style="margin-top:12px; font-weight:700; color:#b91c1c; font-size:13px;">👤 ${guestName}</p>` : ''}
                     </div>
                 `;
             });
         }
 
         function handleRoomBlockClick(roomName, statusLabel, stayToken) {
-            if (statusLabel === 'Available') {
-                alert("No booking");
+            if (statusLabel === 'AVAILABLE') {
+                alert("No active stay in this room right now.");
                 return;
             }
-            if (statusLabel === 'Pre-Booked') {
-                alert("Check-in not complete");
+            if (statusLabel === 'PRE-BOOKED') {
+                alert("This room is pre-booked. Billing can begin once checked in.");
                 return;
             }
 
             selectedRoomNo = roomName;
             selectedStayId = stayToken;
 
-            document.getElementById('splitModalTitle').innerText = `Room ${roomName} Options`;
+            document.getElementById('splitModalTitle').innerText = `${roomName} Options`;
             document.getElementById('workflowSplitModal').style.display = 'flex';
         }
 
@@ -271,7 +293,7 @@
             closeModalWindow('workflowSplitModal');
 
             document.getElementById('roomSelectionWorkspace').style.display = 'none';
-            document.getElementById('viewSectionHeading').innerText = `Room ${selectedRoomNo} › ${billingType === 'food' ? 'Food Order' : 'Extra Bill'}`;
+            document.getElementById('viewSectionHeading').innerText = `${selectedRoomNo} › ${billingType === 'food' ? 'Food Order' : 'Extra Bill'}`;
 
             if (billingType === 'food') {
                 for (let key in quantities) quantities[key] = 0;
@@ -359,7 +381,7 @@
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            document.getElementById('orderConfirmationSummaryText').innerText = `ROOM NO: ${selectedRoomNo}\nCATEGORY: Food Bill\n----------------------\n${listString}\n----------------------\nGRAND TOTAL: ₹${costVal}`;
+            document.getElementById('orderConfirmationSummaryText').innerText = `ROOM: ${selectedRoomNo}\nCATEGORY: Food Bill\n----------------------\n${listString}\n----------------------\nGRAND TOTAL: ₹${costVal}`;
             document.getElementById('orderConfirmationModal').style.display = 'flex';
         }
 
@@ -383,7 +405,7 @@
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            document.getElementById('orderConfirmationSummaryText').innerText = `ROOM NO: ${selectedRoomNo}\nCATEGORY: Extra Service\n----------------------\nService: ${txtTitle}\nCharge Amount: ₹${numAmt}\n----------------------\nGRAND TOTAL: ₹${numAmt}`;
+            document.getElementById('orderConfirmationSummaryText').innerText = `ROOM: ${selectedRoomNo}\nCATEGORY: Extra Service\n----------------------\nService: ${txtTitle}\nCharge Amount: ₹${numAmt}\n----------------------\nGRAND TOTAL: ₹${numAmt}`;
             document.getElementById('orderConfirmationModal').style.display = 'flex';
         }
 

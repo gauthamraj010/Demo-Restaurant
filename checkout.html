@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guest Checkout - 1(h)</title>
-    <!-- Firebase Compatible Module -->
+    <title>Room Checkout - Demo Resort</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <style>
@@ -21,28 +20,30 @@
         body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: start; min-height: 100vh; padding: 20px; }
         
         .web-app-container {
-            width: 100%; max-width: 480px; background: #fcfcfd; min-height: 85vh;
+            width: 100%; max-width: 480px; background: #fff; min-height: 85vh;
             border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             display: flex; flex-direction: column; overflow: hidden;
         }
         
-        /* App Header and Navigation Tabs */
+        /* Fixed App Header UI Blueprint */
         .header { padding: 20px 20px 10px 20px; display: flex; align-items: center; background: #fff; }
         .logo-badge { background-color: #0f172a; color: white; font-weight: 800; padding: 6px 10px; border-radius: 6px; font-size: 14px; margin-right: 12px; }
         .app-title { font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #000; }
 
+        /* Navigation Menu Tab Strip */
         .nav-tabs { display: flex; background: #fff; border-bottom: 2px solid var(--border-color); }
         .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px 0; font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; cursor: pointer; }
-        .tab-item.active { color: var(--primary-blue); border-bottom: 3px solid var(--primary-blue); background: #f8fafc; }
+        .tab-item:hover { color: var(--primary-blue); }
         .tab-item svg { width: 22px; height: 22px; margin-bottom: 4px; fill: none; stroke: currentColor; stroke-width: 2; }
 
+        /* Page Back Title Bar Header Block */
         .page-title-bar { padding: 14px 20px; display: flex; align-items: center; background: #fff; border-bottom: 1px solid var(--border-color); }
         .back-btn { background: none; border: none; cursor: pointer; margin-right: 12px; display: flex; align-items: center; }
         .page-heading { font-size: 16px; font-weight: 700; text-transform: uppercase; }
         
         #loadingMessage { font-size: 14px; color: var(--text-muted); text-align: center; margin: 40px 0; }
         
-        /* Information Summary Elements */
+        /* Card Display Context Layout */
         .content-body { padding: 20px; }
         .detail-card { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 20px; line-height: 1.8; }
         .highlight-balance { font-size: 18px; font-weight: 800; color: #ea580c; margin-top: 8px; }
@@ -57,13 +58,11 @@
 <body>
 
     <div class="web-app-container">
-        <!-- Main Header Blueprint Layout -->
         <header class="header">
             <div class="logo-badge">DR</div>
             <h1 class="app-title">Demo Resort</h1>
         </header>
 
-        <!-- Standard Universal Navigation Menu -->
         <nav class="nav-tabs">
             <div class="tab-item" onclick="window.location.href='index.html'">
                 <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
@@ -94,7 +93,7 @@
         
         <div id="checkoutContent" class="content-body" style="display:none;">
             <div class="detail-card">
-                <h3 id="roomTitle" style="margin-bottom:12px; font-size: 20px; font-weight: 800;">Room: </h3>
+                <h3 id="roomTitle" style="margin-bottom:12px; font-size: 22px; font-weight: 800;">Room: </h3>
                 <p><b>Guest Name:</b> <span id="gName"></span></p>
                 <p><b>Phone:</b> <span id="gPhone"></span></p>
                 <p><b>Check-In Date:</b> <span id="gCheckin"></span></p>
@@ -137,7 +136,7 @@
 
         async function loadStayDetails() {
             if (!stayId) {
-                document.getElementById('loadingMessage').innerText = "Error: Invalid link parameters.";
+                document.getElementById('loadingMessage').innerText = "Error: Invalid link pointer parameters.";
                 return;
             }
             try {
@@ -178,7 +177,7 @@
                     checkedIn: 'Completed'
                 });
 
-                // 2. Automatically write record to your 'transactions' balance sheet ledger
+                // 2. Automatically write record to your 'transactions' balance tracking ledger
                 await db.collection('transactions').add({
                     bookingId: stayId,
                     roomNo: globalStayData.roomNo,
@@ -190,7 +189,7 @@
                     recordedBy: "owner"
                 });
 
-                // 3. Create the text receipt layout string
+                // 3. Create the text receipt payload
                 const receiptMessage = `*VINTAGE GARDEN RESORT*\n` +
                                        `-----------------------------\n` +
                                        `*Room No:* ${globalStayData.roomNo}\n` +
@@ -205,7 +204,7 @@
                                        `Status: *Paid & Settled* ✅\n\n` +
                                        `Thank you for staying with us! ✨`;
 
-                // 4. Open Mobile Share popup sheet (WhatsApp/Email)
+                // 4. Fire Native Share pop-up sheet (WhatsApp/Email)
                 if (navigator.share) {
                     try {
                         await navigator.share({
@@ -217,7 +216,6 @@
                         window.location.href = 'room_details.html';
                     }
                 } else {
-                    // Direct link fallback for desktop browsers
                     window.open(`https://api.whatsapp.com/send?phone=${globalStayData.phone}&text=${encodeURIComponent(receiptMessage)}`, '_blank');
                     window.location.href = 'room_details.html';
                 }

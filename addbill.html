@@ -171,7 +171,8 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let systemRoomList = [];
+        // Hardcoded target layout array list matching your resort exactly
+        const staticResortRooms = ["101", "102", "103", "104", "201", "202", "Twin-1", "Twin-2"];
         let systemActiveBookings = [];
         
         let selectedRoomNo = null;
@@ -185,20 +186,16 @@
 
         async function fetchResortLayoutConfiguration() {
             try {
-                // Fetching static rooms setup
-                let roomsSnap = await db.collection('rooms').get();
-                roomsSnap.forEach(doc => systemRoomList.push({ id: doc.id, ...doc.data() }));
-
-                // FIXED: Fetching all active checked-in bookings by resolving your document strings
+                // Fetching active bookings from your live database
                 let bookingSnap = await db.collection('bookings').get();
                 bookingSnap.forEach(doc => {
                     let data = doc.data();
-                    // Catch profiles that are checkedIn but not marked fully completed yet
                     if (data.checkedIn && data.checkedIn !== "Completed") {
                         systemActiveBookings.push({ id: doc.id, ...data });
                     }
                 });
 
+                // Fetch food menu items from database
                 let menuSnap = await db.collection('menuItems').get();
                 let menuItems = [];
                 menuSnap.forEach(doc => menuItems.push({ id: doc.id, ...doc.data() }));
@@ -207,7 +204,7 @@
                 buildFoodMenuLayout(menuItems);
             } catch (err) {
                 console.error(err);
-                document.getElementById('loadingWorkspaceText').innerText = "Failed to sync system configuration.";
+                document.getElementById('loadingWorkspaceText').innerText = "Database connection offline.";
             }
         }
 
@@ -216,30 +213,29 @@
             grid.innerHTML = '';
             document.getElementById('loadingWorkspaceText').style.display = 'none';
 
-            // Simple room sorting helper if rooms are named numerically or standard strings
-            systemRoomList.sort((a, b) => String(a.name).localeCompare(String(b.name), undefined, {numeric: true}));
-
-            systemRoomList.forEach(room => {
-                // FIXED: Checking against exact field name mapping 'roomNo'
-                let activeOccupant = systemActiveBookings.find(b => b.roomNo === room.name);
+            staticResortRooms.forEach(roomName => {
+                let activeOccupant = systemActiveBookings.find(b => b.roomNo === roomName);
                 let statusClass = 'status-available';
                 let labelText = 'Available';
                 let guestName = '';
                 let stayToken = '';
 
                 if (activeOccupant) {
-                    statusClass = 'status-stayback';
-                    labelText = 'Stay Back';
-                    guestName = activeOccupant.name;
-                    stayToken = activeOccupant.id;
-                } else if (room.isPrebooked) {
-                    statusClass = 'status-prebooked';
-                    labelText = 'Pre-Booked';
+                    // Check if they are pre-booked or checked in
+                    if (activeOccupant.checkedIn === "In-House" || activeOccupant.checkedIn === true) {
+                        statusClass = 'status-stayback';
+                        labelText = 'Stay Back';
+                        guestName = activeOccupant.name;
+                        stayToken = activeOccupant.id;
+                    } else {
+                        statusClass = 'status-prebooked';
+                        labelText = 'Pre-Booked';
+                    }
                 }
 
                 grid.innerHTML += `
-                    <div class="room-block-card ${statusClass}" onclick="handleRoomBlockClick('${room.name}', '${labelText}', '${stayToken}')">
-                        <h3>Room ${room.name}</h3>
+                    <div class="room-block-card ${statusClass}" onclick="handleRoomBlockClick('${roomName}', '${labelText}', '${stayToken}')">
+                        <h3>Room ${roomName}</h3>
                         <p style="color:var(--text-muted); font-size:11px;">Status: <b>${labelText}</b></p>
                         ${guestName ? `<p style="margin-top:6px; font-weight:700; color:#15803d;">👤 ${guestName}</p>` : ''}
                     </div>
@@ -387,7 +383,6 @@
 
         async function writeBillRecordToDatabase() {
             try {
-                // Save directly under restaurantOrders collection matching your pipeline
                 await db.collection('restaurantOrders').add(activeCompiledPayload);
                 alert("Bill added successfully!");
                 window.location.href = 'index.html';

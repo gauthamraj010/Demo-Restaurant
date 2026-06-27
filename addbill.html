@@ -42,7 +42,7 @@
         .content-workspace { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
         .status-msg { text-align: center; color: var(--text-muted); font-size: 14px; margin-top: 30px; }
 
-        /* Rooms Matrix 2x2 Layout to perfectly mirror your core setup style */
+        /* Rooms Matrix Layout */
         .room-matrix-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
         .room-block-card { background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; padding: 22px 10px; text-align: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
         .room-block-card h3 { font-size: 20px; font-weight: 800; margin-bottom: 8px; color: #000; }
@@ -172,7 +172,7 @@
         let roomsState = {};
 
         // -------------------------------------------------------------
-        // CS1: Room Bookings Database (booking-25ba4)
+        // CS1: Room Bookings & Balanced Sheet Database (booking-25ba4)
         // -------------------------------------------------------------
         const roomApp = firebase.initializeApp({
             apiKey: "AIzaSyCebk_0DBBu5w0cvWP0lUKqQanmiwoC42U",
@@ -182,7 +182,7 @@
         const roomDb = firebase.firestore(roomApp);
 
         // -------------------------------------------------------------
-        // CS2: Food Menu & Restaurant Orders Database (wild-sapiens-station)
+        // CS2: Food Menu & Staff Profiles Database (wild-sapiens-station)
         // -------------------------------------------------------------
         const billingApp = firebase.initializeApp({
             apiKey: "AIzaSyBNXgwgzr579prCiMl72QFa8qCIw7ZwihI",
@@ -201,7 +201,7 @@
         let prices = {};
         let quantities = {};
         let idToName = {};
-        let activeCompiledPayload = {};
+        let singleItemPayload = {};
 
         function initAppWorkspace() {
             customRoomsList.forEach(roomName => {
@@ -386,14 +386,12 @@
         function compileFoodBillOrder() {
             let listString = "";
             let costVal = 0;
-            let itemsSummaryArray = [];
 
             for (let key in quantities) {
                 if (quantities[key] > 0) {
                     let title = idToName[key];
                     listString += `${title} x ${quantities[key]} (₹${prices[key] * quantities[key]})\n`;
                     costVal += quantities[key] * prices[key];
-                    itemsSummaryArray.push({ itemId: key, name: title, qty: quantities[key], subtotal: quantities[key] * prices[key] });
                 }
             }
 
@@ -402,15 +400,11 @@
                 return;
             }
 
-            activeCompiledPayload = {
-                roomNo: selectedRoomNo,
-                bookingId: selectedStayId,
+            singleItemPayload = {
                 billType: "Food",
-                summary: listString,
-                items: itemsSummaryArray,
+                particular: listString.trim(),
                 amount: costVal,
-                status: "Pending",
-                timestamp: new Date().toISOString() // Bypasses internal cross-project database verification structural blocks
+                date: new Date().toISOString()
             };
 
             document.getElementById('orderConfirmationSummaryText').innerText = `ROOM: ${selectedRoomNo}\nCATEGORY: Food Bill\n----------------------\n${listString}\n----------------------\nGRAND TOTAL: ₹${costVal}`;
@@ -426,15 +420,11 @@
                 return;
             }
 
-            activeCompiledPayload = {
-                roomNo: selectedRoomNo,
-                bookingId: selectedStayId,
+            singleItemPayload = {
                 billType: "Extra",
-                summary: `${txtTitle}: ₹${numAmt}`,
                 particular: txtTitle,
                 amount: numAmt,
-                status: "Pending",
-                timestamp: new Date().toISOString() // Bypasses internal cross-project database verification structural blocks
+                date: new Date().toISOString()
             };
 
             document.getElementById('orderConfirmationSummaryText').innerText = `ROOM: ${selectedRoomNo}\nCATEGORY: Extra Service\n----------------------\nService: ${txtTitle}\nCharge Amount: ₹${numAmt}\n----------------------\nGRAND TOTAL: ₹${numAmt}`;
@@ -443,12 +433,18 @@
 
         async function writeBillRecordToDatabase() {
             try {
-                // Saves cleanly to wild-sapiens-station restaurantOrders collection
-                await billingDb.collection('restaurantOrders').add(activeCompiledPayload);
-                alert("Bill added successfully!");
+                // target active booking doc via its stayId inside bookings (CS1)
+                const bookingRef = roomDb.collection('bookings').doc(selectedStayId);
+                
+                // Atomically inject charges directly into the extraBills array in CS1
+                await bookingRef.update({
+                    extraBills: firebase.firestore.FieldValue.arrayUnion(singleItemPayload)
+                });
+
+                alert("Bill appended directly to room sheet successfully!");
                 window.location.href = 'index.html';
             } catch (err) {
-                alert("Error adding bill entry: " + err.message);
+                alert("Error linking item to sheet: " + err.message);
             }
         }
 

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create New Bill - Demo Resort</title>
+    <!-- Firebase Module Dependencies -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <style>
@@ -14,6 +15,7 @@
             --border-color: #e5e7eb;
             --primary-blue: #2563eb;
             --success-green: #10b981;
+            --occupied-red: #ef4444;
             --warning-orange: #ea580c;
             --text-muted: #6b7280;
         }
@@ -41,16 +43,19 @@
         .content-workspace { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
         .status-msg { text-align: center; color: var(--text-muted); font-size: 14px; margin-top: 30px; }
 
-        .room-matrix-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .room-block-card { background: white; border: 2px solid var(--border-color); border-radius: 12px; padding: 16px; cursor: pointer; position: relative; transition: all 0.2s; }
-        .room-block-card h3 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
-        .room-block-card p { font-size: 12px; font-weight: 600; }
+        /* Rooms Matrix 2x2 Layout to perfectly mirror your core setup style */
+        .room-matrix-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .room-block-card { background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; padding: 22px 10px; text-align: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .room-block-card h3 { font-size: 20px; font-weight: 800; margin-bottom: 8px; color: #000; }
         
-        .status-stayback { border-color: #f87171; background: #fef2f2; } /* Soft red style matching your screenshot */
-        .status-prebooked { border-color: #fef08a; background: #fefce8; } /* Soft yellow style */
-        .status-available { border-color: #bae6fd; background: #f0f9ff; } /* Soft blue style */
+        .room-status-badge { font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; }
+        
+        .status-stayback { background: #fee2e2; color: var(--occupied-red); }
+        .status-checkout-pending { background: #ffedd5; color: #ea580c; border: 1px dashed #ea580c; }
+        .status-prebooked { background: #fef3c7; color: var(--warning-orange); }
+        .status-available { background: #e0f2fe; color: var(--primary-blue); }
 
-        .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
         .modal-box { background: white; width: 100%; max-width: 360px; border-radius: 16px; padding: 20px; box-shadow: 0 20px 25px rgba(0,0,0,0.15); }
         .modal-title { font-size: 15px; font-weight: 800; text-transform: uppercase; margin-bottom: 16px; text-align: center; }
         .btn-modal-option { width: 100%; padding: 14px; border-radius: 8px; font-weight: 700; font-size: 14px; text-transform: uppercase; border: 1px solid var(--border-color); background: white; margin-bottom: 10px; cursor: pointer; text-align: center; }
@@ -58,7 +63,7 @@
         
         .modal-btn-row { display: flex; gap: 10px; margin-top: 14px; }
         .modal-btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; font-size: 13px; text-align: center; text-transform: uppercase; }
-        .btn-m-confirm { background: #10b981; color: white; }
+        .btn-m-confirm { background: var(--success-green); color: white; }
         .btn-m-cancel { background: #e5e7eb; color: var(--text-main); }
 
         .category-button { display: block; width: 100%; margin-bottom: 8px; padding: 12px; font-size: 15px; font-weight: 700; background-color: #3498db; color: white; border: none; cursor: pointer; border-radius: 8px; text-transform: uppercase; }
@@ -69,7 +74,7 @@
         .quantity-controls button { padding: 4px 10px; font-size: 16px; font-weight: 800; background-color: #ef4444; color: white; border: none; cursor: pointer; margin: 0 5px; border-radius: 4px; }
         .quantity-controls span { width: 24px; display: inline-block; text-align: center; font-size: 15px; }
         #totalBillSummary { font-size: 18px; font-weight: 800; text-align: right; margin: 14px 0; color: var(--text-main); }
-        .btn-submit-main { background-color: #10b981; color: white; padding: 14px; border: none; font-size: 15px; font-weight: 700; width: 100%; cursor: pointer; border-radius: 8px; text-transform: uppercase; }
+        .btn-submit-main { background-color: var(--success-green); color: white; padding: 14px; border: none; font-size: 15px; font-weight: 700; width: 100%; cursor: pointer; border-radius: 8px; text-transform: uppercase; }
 
         .form-group { margin-bottom: 14px; }
         .form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
@@ -93,7 +98,7 @@
                 <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
                 Add bill
             </div>
-            <div class="tab-item" onclick="window.location.href='pending.html'">
+            <div class="tab-item" onclick="window.location.href='pendingorder.html'">
                 <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 Pending Orders
             </div>
@@ -111,6 +116,7 @@
             <div id="roomSelectionWorkspace" class="room-matrix-grid"></div>
             <div id="loadingWorkspaceText" class="status-msg">Scanning resort layout records...</div>
 
+            <!-- Food Bill Subspace Options -->
             <div id="foodBillWorkspace" style="display:none;">
                 <button class="category-button" onclick="toggleMenuCategory('beverages')">Beverages</button>
                 <div id="beverages" class="menu-section"><div class="menu-list"></div></div>
@@ -128,6 +134,7 @@
                 <button class="btn-submit-main" onclick="compileFoodBillOrder()">Add Bill</button>
             </div>
 
+            <!-- Extra Miscellaneous Service Charge Fields -->
             <div id="extraBillWorkspace" style="display:none;">
                 <div class="form-group">
                     <label>Bill Name / Particular Description</label>
@@ -141,6 +148,7 @@
             </div>
         </div>
 
+        <!-- Workflow router popup overlay window -->
         <div class="modal-overlay" id="workflowSplitModal">
             <div class="modal-box">
                 <h3 class="modal-title" id="splitModalTitle">Room Options</h3>
@@ -150,6 +158,7 @@
             </div>
         </div>
 
+        <!-- Order verification dialog frame -->
         <div class="modal-overlay" id="orderConfirmationModal">
             <div class="modal-box">
                 <h3 class="modal-title">Confirm Bill Details</h3>
@@ -163,21 +172,33 @@
     </div>
 
     <script>
-        const firebaseConfig = {
+        const todayStr = new Date().toLocaleDateString('sv'); 
+        const customRoomsList = ["A-1", "Twin-1", "Twin-2", "Paddy", "P-1", "P-2", "Delux"];
+        let roomsState = {};
+
+        // -------------------------------------------------------------
+        // INITIALIZE DB 1 (Room Bookings - booking-25ba4)
+        // -------------------------------------------------------------
+        const roomApp = firebase.initializeApp({
+            apiKey: "AIzaSyCebk_0DBBu5w0cvWP0lUKqQanmiwoC42U",
+            authDomain: "booking-25ba4.firebaseapp.com",
+            projectId: "booking-25ba4"
+        }, "roomAppInstance");
+        const roomDb = firebase.firestore(roomApp);
+
+        // -------------------------------------------------------------
+        // INITIALIZE DB 2 (Menu & Order logs - wild-sapiens-station)
+        // -------------------------------------------------------------
+        const billingApp = firebase.initializeApp({
             apiKey: "AIzaSyBNXgwgzr579prCiMl72QFa8qCIw7ZwihI",
             authDomain: "wild-sapiens-station.firebaseapp.com",
             projectId: "wild-sapiens-station",
             storageBucket: "wild-sapiens-station.firebasestorage.app",
             messagingSenderId: "758377996842",
             appId: "1:758377996842:web:aa8a45807902a94ebf9953"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        }, "billingAppInstance");
+        const billingDb = firebase.firestore(billingApp);
 
-        // Updated static room list layout to match your real dashboard structure perfectly
-        const staticResortRooms = ["A-1", "Twin-1", "Twin-2", "Paddy", "P-1", "P-2", "Delux"];
-        let systemActiveBookings = [];
-        
         let selectedRoomNo = null;
         let selectedStayId = null;
         let selectedBillingType = null;
@@ -187,38 +208,70 @@
         let idToName = {};
         let activeCompiledPayload = {};
 
-        // Helper function to get today's date formatted as YYYY-MM-DD
-        function getFormattedToday() {
-            let d = new Date();
-            let month = '' + (d.getMonth() + 1);
-            let day = '' + d.getDate();
-            let year = d.getFullYear();
-            if (month.length < 2) month = '0' + month;
-            if (day.length < 2) day = '0' + day;
-            return [year, month, day].join('-');
+        function initAppWorkspace() {
+            // Pre-populate container state
+            customRoomsList.forEach(roomName => {
+                roomsState[roomName] = { status: 'Loading', data: null, docId: null };
+            });
+            
+            // Fire layout scans
+            fetchRoomStatusesParallel();
+            fetchFoodMenuItems();
         }
 
-        async function fetchResortLayoutConfiguration() {
-            try {
-                // Fetching active layout from your real bookings group
-                let bookingSnap = await db.collection('bookings').get();
-                bookingSnap.forEach(doc => {
-                    systemActiveBookings.push({ id: doc.id, ...doc.data() });
-                });
-            } catch (err) {
-                console.log("Bookings read error bypassed: ", err);
-            }
+        function fetchRoomStatusesParallel() {
+            const roomPromises = customRoomsList.map(roomName => checkSingleRoomStatus(roomName));
+            Promise.all(roomPromises).then(() => {
+                renderRoomMatrixGrid();
+            }).catch(err => console.error("Parallel rooms load failed:", err));
+        }
 
+        async function checkSingleRoomStatus(roomName) {
             try {
-                let menuSnap = await db.collection('menuItems').get();
+                // Exactly mirrors your logic from room_details.html
+                let activeSnap = await roomDb.collection('bookings')
+                                         .where('roomNo', '==', roomName)
+                                         .where('checkedIn', '==', true).get();
+
+                if (!activeSnap.empty) {
+                    let stayData = activeSnap.docs[0].data();
+                    let docId = activeSnap.docs[0].id;
+                    
+                    if (stayData.checkout === todayStr) {
+                        roomsState[roomName] = { status: 'CheckoutPending', data: stayData, docId: docId };
+                    } else {
+                        roomsState[roomName] = { status: 'StayBack', data: stayData, docId: docId };
+                    }
+                    return; 
+                }
+
+                let reservedSnap = await roomDb.collection('bookings')
+                                           .where('roomNo', '==', roomName)
+                                           .where('checkin', '==', todayStr)
+                                           .get();
+
+                let freshReservation = reservedSnap.docs.find(d => d.data().checkedIn !== 'Completed' && d.data().checkedIn !== true);
+
+                if (freshReservation) {
+                    roomsState[roomName] = { status: 'Reserved', data: freshReservation.data(), docId: freshReservation.id };
+                } else {
+                    roomsState[roomName] = { status: 'Available', data: null, docId: null };
+                }
+            } catch (error) {
+                console.error("Error evaluating status for room " + roomName, error);
+                roomsState[roomName] = { status: 'Available', data: null, docId: null };
+            }
+        }
+
+        async function fetchFoodMenuItems() {
+            try {
+                let menuSnap = await billingDb.collection('menuItems').get();
                 let menuItems = [];
                 menuSnap.forEach(doc => menuItems.push({ id: doc.id, ...doc.data() }));
                 buildFoodMenuLayout(menuItems);
             } catch(err) {
-                console.log("Menu items read error bypassed: ", err);
+                console.error("Menu items read error bypassed: ", err);
             }
-
-            renderRoomMatrixGrid();
         }
 
         function renderRoomMatrixGrid() {
@@ -226,63 +279,51 @@
             grid.innerHTML = '';
             document.getElementById('loadingWorkspaceText').style.display = 'none';
 
-            let todayStr = getFormattedToday();
+            customRoomsList.forEach(roomName => {
+                const room = roomsState[roomName];
+                let badgeClass = 'status-available';
+                let displayLabel = 'Available';
+                let guestLine = '';
 
-            staticResortRooms.forEach(roomName => {
-                // Find any record matching this room name
-                let roomBookings = systemActiveBookings.filter(b => b.roomNo === roomName);
-                
-                let statusClass = 'status-available';
-                let labelText = 'AVAILABLE';
-                let guestName = '';
-                let stayToken = '';
-
-                if (roomBookings.length > 0) {
-                    // Look for an in-house stay where today's date falls on or after check-in
-                    let currentStay = roomBookings.find(b => b.checkin <= todayStr && b.checkout >= todayStr);
-                    
-                    if (currentStay) {
-                        statusClass = 'status-stayback';
-                        labelText = 'STAY BACK';
-                        guestName = currentStay.name || 'In-House';
-                        stayToken = currentStay.id;
-                    } else {
-                        // If there is an upcoming booking listed for the room
-                        let upcomingStay = roomBookings.find(b => b.checkin > todayStr);
-                        if (upcomingStay) {
-                            statusClass = 'status-prebooked';
-                            labelText = 'PRE-BOOKED';
-                            guestName = upcomingStay.name || '';
-                        }
-                    }
+                if (room.status === 'StayBack') {
+                    badgeClass = 'status-stayback';
+                    displayLabel = 'Stay Back';
+                    guestLine = room.data.name ? `<p style="margin-top:10px; font-weight:700; color:#ef4444; font-size:12px;">👤 ${room.data.name}</p>` : '';
+                } else if (room.status === 'CheckoutPending') {
+                    badgeClass = 'status-checkout-pending';
+                    displayLabel = '⚠️ Checkout';
+                    guestLine = room.data.name ? `<p style="margin-top:10px; font-weight:700; color:#ea580c; font-size:12px;">👤 ${room.data.name}</p>` : '';
+                } else if (room.status === 'Reserved') {
+                    badgeClass = 'status-prebooked';
+                    displayLabel = 'Pre-Booked';
                 }
 
                 grid.innerHTML += `
-                    <div class="room-block-card ${statusClass}" onclick="handleRoomBlockClick('${roomName}', '${labelText}', '${stayToken}')">
-                        <h3 style="font-size: 20px;">${roomName}</h3>
-                        <div style="margin-top: 8px;">
-                            <span style="font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 20px; background: rgba(0,0,0,0.05); color: #374151;">
-                                ${labelText}
-                            </span>
+                    <div class="room-block-card" onclick="handleRoomBlockClick('${roomName}')">
+                        <h3>${roomName}</h3>
+                        <div style="margin-top: 6px;">
+                            <span class="room-status-badge ${badgeClass}">${displayLabel}</span>
                         </div>
-                        ${guestName && labelText === 'STAY BACK' ? `<p style="margin-top:12px; font-weight:700; color:#b91c1c; font-size:13px;">👤 ${guestName}</p>` : ''}
+                        ${guestLine}
                     </div>
                 `;
             });
         }
 
-        function handleRoomBlockClick(roomName, statusLabel, stayToken) {
-            if (statusLabel === 'AVAILABLE') {
+        function handleRoomBlockClick(roomName) {
+            const room = roomsState[roomName];
+            
+            if (room.status === 'Available') {
                 alert("No active stay in this room right now.");
                 return;
             }
-            if (statusLabel === 'PRE-BOOKED') {
+            if (room.status === 'Reserved') {
                 alert("This room is pre-booked. Billing can begin once checked in.");
                 return;
             }
 
             selectedRoomNo = roomName;
-            selectedStayId = stayToken;
+            selectedStayId = room.docId;
 
             document.getElementById('splitModalTitle').innerText = `${roomName} Options`;
             document.getElementById('workflowSplitModal').style.display = 'flex';
@@ -411,7 +452,8 @@
 
         async function writeBillRecordToDatabase() {
             try {
-                await db.collection('restaurantOrders').add(activeCompiledPayload);
+                // Saves directly to wild-sapiens-station restaurantOrders collection
+                await billingDb.collection('restaurantOrders').add(activeCompiledPayload);
                 alert("Bill added successfully!");
                 window.location.href = 'index.html';
             } catch (err) {
@@ -423,7 +465,7 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
-        window.onload = fetchResortLayoutConfiguration;
+        window.onload = initAppWorkspace;
     </script>
 </body>
 </html>

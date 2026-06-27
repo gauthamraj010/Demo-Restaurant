@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Room Details - 1(b)</title>
-    <!-- Firebase Apps Compatible Modules -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     
@@ -30,7 +29,7 @@
             display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border-color);
         }
 
-        /* Top Layout Header & Navigation Tabs */
+        /* Top Header & Navigation Tabs styling to match your App Theme layout */
         .header { padding: 20px 20px 10px 20px; display: flex; align-items: center; background: #fff; }
         .logo-badge { background-color: #0f172a; color: white; font-weight: 800; padding: 6px 10px; border-radius: 6px; font-size: 14px; margin-right: 12px; }
         .app-title { font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #000; }
@@ -44,7 +43,7 @@
         .back-btn { background: none; border: none; cursor: pointer; margin-right: 12px; display: flex; align-items: center; }
         .page-heading { font-size: 16px; font-weight: 700; text-transform: uppercase; }
 
-        /* Rooms Grid Layout */
+        /* Rooms Matrix 2x2 Layout */
         .rooms-grid { padding: 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
         .room-card { background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; padding: 22px 10px; text-align: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
         .room-number { font-size: 20px; font-weight: 800; margin-bottom: 8px; color: #000; }
@@ -54,14 +53,14 @@
         .spinner { border: 2px solid rgba(0, 0, 0, 0.1); border-top: 2px solid var(--primary-blue); border-radius: 50%; width: 12px; height: 12px; animation: spin 0.8s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Dynamic Status Colors */
+        /* Status Colors */
         .status-loading { background: #f3f4f6; color: var(--text-muted); }
         .status-available { background: #e0f2fe; color: var(--primary-blue); }
         .status-reserved { background: #fef3c7; color: var(--warning-orange); }
         .status-stayback { background: #fee2e2; color: var(--occupied-red); }
         .status-checkout-pending { background: #ffedd5; color: #ea580c; border: 1px dashed #ea580c; }
 
-        /* Modals */
+        /* Dynamic Popups Modals */
         .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
         .modal { background: #fff; border-radius: 16px; padding: 24px; width: 100%; max-width: 400px; }
         .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
@@ -70,7 +69,7 @@
         .btn-checkin { background: var(--success-green); color: white; }
         .btn-walkin { background: var(--primary-blue); color: white; }
         .btn-cancel { background: #e5e7eb; color: var(--text-main); }
-        .modal input { width: 100%; padding: 10px 12px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; }
+        .modal input { width: 100%; padding: 10px 12px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -108,8 +107,7 @@
         </div>
 
         <div class="rooms-grid" id="roomsContainer">
-            <!-- Rooms render instantly -->
-        </div>
+            </div>
     </div>
 
     <div id="roomModalBg" class="modal-bg" style="display: none;">
@@ -117,31 +115,26 @@
     </div>
 
     <script>
-        // Use system tracking date cleanly
-        const todayStr = new Date().toLocaleDateString('sv'); // YYYY-MM-DD
+        // System tracking date formatted cleanly as YYYY-MM-DD
+        const todayStr = new Date().toLocaleDateString('sv'); 
 
         const customRoomsList = ["A-1", "Twin-1", "Twin-2", "Paddy", "P-1", "P-2", "Delux"];
         let roomsState = {}; 
 
-        const appCS1 = firebase.initializeApp({
+        // Initialize single CS1 instance setup
+        const firebaseConfig = {
             apiKey: "AIzaSyCebk_0DBBu5w0cvWP0lUKqQanmiwoC42U",
             authDomain: "booking-25ba4.firebaseapp.com",
             projectId: "booking-25ba4"
-        }, "cs1");
-        const dbCS1 = firebase.firestore(appCS1);
-
-        const appCS2 = firebase.initializeApp({
-            apiKey: "AIzaSyDa-YOUR_CS2_API_KEY_HERE", 
-            authDomain: "billing-account.firebaseapp.com",
-            projectId: "billing-project-id" 
-        }, "cs2");
-        const dbCS2 = firebase.firestore(appCS2);
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
         function preloadRoomsLayout() {
             const container = document.getElementById('roomsContainer');
             container.innerHTML = '';
             customRoomsList.forEach(roomName => {
-                roomsState[roomName] = { status: 'Loading', data: null, cs2DocId: null };
+                roomsState[roomName] = { status: 'Loading', data: null, docId: null };
                 container.innerHTML += `
                     <div class="room-card" id="card-${roomName}" onclick="handleRoomClick('${roomName}')">
                         <div class="room-number">${roomName}</div>
@@ -156,46 +149,51 @@
 
         function fetchAllRoomsParallel() {
             const roomPromises = customRoomsList.map(roomName => checkSingleRoomStatus(roomName));
-            Promise.all(roomPromises).catch(err => console.error(err));
+            Promise.all(roomPromises).catch(err => console.error("Parallel error:", err));
         }
 
         async function checkSingleRoomStatus(roomName) {
             try {
-                // 1. Get ALL active stays for this specific room to verify date spans
-                let cs2Snap = await dbCS2.collection('active_stays').where('roomNo', '==', roomName).get();
-                
-                if (!cs2Snap.empty) {
-                    let stayData = cs2Snap.docs[0].data();
-                    let docId = cs2Snap.docs[0].id;
-                    let checkoutDate = stayData.checkoutDate; // Must be stored in YYYY-MM-DD when checking in
+                // 1. Check if room is CURRENTLY checked-in/occupied in bookings collection
+                let activeSnap = await db.collection('bookings')
+                                         .where('roomNo', '==', roomName)
+                                         .where('checkedIn', '==', true).get();
 
-                    if (checkoutDate === todayStr) {
-                        // Checkout is today! Pending action alert state.
+                if (!activeSnap.empty) {
+                    let stayData = activeSnap.docs[0].data();
+                    let docId = activeSnap.docs[0].id;
+                    
+                    // Match expected check-out date to flag an alert
+                    if (stayData.checkout === todayStr) {
                         updateRoomUIState(roomName, 'CheckoutPending', stayData, docId);
                     } else {
-                        // Standard longer multi-day Stay Back
                         updateRoomUIState(roomName, 'StayBack', stayData, docId);
                     }
-                    return; // Skip checking CS1 entirely
+                    return; 
                 }
 
-                // 2. If room is operationally empty, verify active reservations for today in CS1
-                let cs1Snap = await dbCS1.collection('bookings')
-                                         .where('roomNo', '==', roomName)
-                                         .where('checkin', '==', todayStr).get();
-                
-                if (!cs1Snap.empty) {
-                    updateRoomUIState(roomName, 'Reserved', cs1Snap.docs[0].data(), null);
+                // 2. If no one is inside, check if there is an upcoming reservation for today
+                let reservedSnap = await db.collection('bookings')
+                                           .where('roomNo', '==', roomName)
+                                           .where('checkin', '==', todayStr)
+                                           .get();
+
+                // Make sure we filter out already completed bookings if they exist for today
+                let freshReservation = reservedSnap.docs.find(d => d.data().checkedIn !== 'Completed' && d.data().checkedIn !== true);
+
+                if (freshReservation) {
+                    updateRoomUIState(roomName, 'Reserved', freshReservation.data(), freshReservation.id);
                 } else {
                     updateRoomUIState(roomName, 'Available', null, null);
                 }
             } catch (error) {
+                console.error(error);
                 updateRoomUIState(roomName, 'Available', null, null);
             }
         }
 
         function updateRoomUIState(roomName, status, data, docId) {
-            roomsState[roomName] = { status: status, data: data, cs2DocId: docId };
+            roomsState[roomName] = { status: status, data: data, docId: docId };
             const badge = document.getElementById(`status-${roomName}`);
             if (!badge) return;
             
@@ -219,9 +217,9 @@
             const room = roomsState[roomName];
             if (room.status === 'Loading') return;
 
-            // REDIRECT ROUTER: Send occupied rooms straight to checkout.html layout
+            // Direct occupied states straight to checkout.html layout
             if (room.status === 'StayBack' || room.status === 'CheckoutPending') {
-                window.location.href = `checkout.html?room=${encodeURIComponent(roomName)}&stayId=${room.cs2DocId}`;
+                window.location.href = `checkout.html?room=${encodeURIComponent(roomName)}&stayId=${room.docId}`;
                 return;
             }
 
@@ -235,10 +233,10 @@
                     <div class="guest-details-box">
                         <b>Guest Name:</b> ${room.data.name}<br>
                         <b>Phone:</b> ${room.data.phone}<br>
-                        <b>Total:</b> ₹${room.data.total || 0}
+                        <b>Total:</b> ₹${room.data.total || 0}<br>
+                        <b>Advance Paid:</b> ₹${room.data.advance || 0}
                     </div>
-                    <input type="date" id="reserveCheckoutDate" value="${room.data.checkout || ''}" style="width:100%; padding:10px; margin-bottom:12px; border:1px solid var(--border-color); border-radius:8px;">
-                    <button class="action-btn btn-checkin" onclick="processCheckIn('${roomName}', 'owner')">Confirm Check-In</button>
+                    <button class="action-btn btn-checkin" onclick="processCheckIn('${room.docId}')">Confirm Check-In</button>
                     <button class="action-btn btn-cancel" onclick="closeModal()">Close</button>
                 `;
             } else {
@@ -248,7 +246,7 @@
                     <input type="text" id="walkInPhone" placeholder="Phone Number" required>
                     <input type="number" id="walkInTotal" placeholder="Total Amount" required>
                     <input type="number" id="walkInAdvance" placeholder="Advance Paid" required>
-                    <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">Expected Check-Out Date:</label>
+                    <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px; font-weight:700;">CHECK-OUT DATE:</label>
                     <input type="date" id="walkInCheckoutDate" required>
                     <button class="action-btn btn-walkin" onclick="saveWalkInAndCheckIn('${roomName}')">Save & Check-In</button>
                     <button class="action-btn btn-cancel" onclick="closeModal()">Cancel</button>
@@ -256,24 +254,17 @@
             }
         }
 
-        function processCheckIn(roomName, creatorType) {
-            const roomData = roomsState[roomName].data;
-            const checkoutDate = document.getElementById('reserveCheckoutDate').value;
-            if(!checkoutDate) { alert("Please select a checkout date."); return; }
-
-            dbCS2.collection('active_stays').add({
-                roomNo: roomName,
-                name: roomData.name,
-                phone: roomData.phone,
-                total: parseFloat(roomData.total),
-                advance: parseFloat(roomData.advance || 0),
-                balance: parseFloat(roomData.total) - parseFloat(roomData.advance || 0),
-                checkinDate: todayStr,
-                checkoutDate: checkoutDate,
-                createdBy: creatorType
-            }).then(() => { closeModal(); preloadRoomsLayout(); });
+        // Fixes the broken connection: Updates pre-booked stay to live status
+        function processCheckIn(docId) {
+            db.collection('bookings').doc(docId).update({
+                checkedIn: true
+            }).then(() => {
+                closeModal();
+                preloadRoomsLayout();
+            }).catch(err => alert("Error updating check-in: " + err));
         }
 
+        // Direct registration process for walk-ins
         function saveWalkInAndCheckIn(roomName) {
             const name = document.getElementById('walkInName').value.trim();
             const phone = document.getElementById('walkInPhone').value.trim();
@@ -281,15 +272,23 @@
             const advance = parseFloat(document.getElementById('walkInAdvance').value) || 0;
             const checkoutDate = document.getElementById('walkInCheckoutDate').value;
 
-            if (!name || !phone || !checkoutDate) { alert("Please fill all required fields."); return; }
+            if (!name || !phone || !checkoutDate) { alert("Please complete all required entries."); return; }
 
-            dbCS1.collection('bookings').add({
-                roomNo: roomName, name: name, phone: phone, total: total, advance: advance, checkin: todayStr, checkout: checkoutDate, createdBy: 'staff'
+            // Write walk-in directly with checkedIn: true status active
+            db.collection('bookings').add({
+                roomNo: roomName,
+                name: name,
+                phone: phone,
+                total: total,
+                advance: advance,
+                checkin: todayStr,
+                checkout: checkoutDate,
+                checkedIn: true,
+                createdBy: 'staff'
             }).then(() => {
-                return dbCS2.collection('active_stays').add({
-                    roomNo: roomName, name: name, phone: phone, total: total, advance: advance, balance: total - advance, checkinDate: todayStr, checkoutDate: checkoutDate, createdBy: 'staff'
-                });
-            }).then(() => { closeModal(); preloadRoomsLayout(); });
+                closeModal();
+                preloadRoomsLayout();
+            }).catch(err => alert("Error saving walk-in: " + err));
         }
 
         function closeModal() { document.getElementById('roomModalBg').style.display = 'none'; }

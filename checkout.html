@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guest Checkout - 1(h)</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --bg-color: #f4f5f7;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --border-color: #e5e7eb;
+            --primary-blue: #2563eb;
+            --success-green: #10b981;
+            --text-muted: #6b7280;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-color); display: flex; justify-content: center; padding: 20px; }
+        
+        .web-app-container {
+            width: 100%; max-width: 480px; background: #fff; min-height: 85vh;
+            border-radius: 16px; border: 1px solid var(--border-color); padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column;
+        }
+        .header { display: flex; align-items: center; margin-bottom: 24px; }
+        .back-btn { background: none; border: none; cursor: pointer; margin-right: 12px; display: flex; align-items: center; }
+        h2 { font-size: 20px; font-weight: 800; }
+        
+        #loadingMessage { font-size: 14px; color: var(--text-muted); text-align: center; margin: 40px 0; }
+        
+        .detail-card { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 20px; line-height: 1.8; }
+        .highlight-balance { font-size: 18px; font-weight: 800; color: #ea580c; margin-top: 8px; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
+        .form-select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; background-color: #fff; font-weight: 600; }
+        
+        .action-btn { width: 100%; padding: 14px; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; border: none; text-align: center; color: white; background: var(--success-green); transition: background 0.2s; }
+        .action-btn:hover { background: #059669; }
+    </style>
+</head>
+<body>
+
+    <div class="web-app-container">
+        <div class="header">
+            <button class="back-btn" onclick="window.location.href='room_details.html'">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <h2>Room Checkout</h2>
+        </div>
+
+        <div id="loadingMessage">Loading active stay files...</div>
+        
+        <div id="checkoutContent" style="display:none;">
+            <div class="detail-card">
+                <h3 id="roomTitle" style="margin-bottom:12px; font-size: 22px; font-weight: 800;">Room: </h3>
+                <p><b>Guest Name:</b> <span id="gName"></span></p>
+                <p><b>Phone:</b> <span id="gPhone"></span></p>
+                <p><b>Check-In Date:</b> <span id="gCheckin"></span></p>
+                <p><b>Check-Out Date:</b> <span id="gCheckout"></span></p>
+                <hr style="margin:12px 0; border:0; border-top:1px solid var(--border-color);">
+                <p><b>Total Amount:</b> ₹<span id="gTotal"></span></p>
+                <p><b>Advance Paid:</b> ₹<span id="gAdvance"></span></p>
+                <div class="highlight-balance">Pending Balance: ₹<span id="gBalance"></span></div>
+            </div>
+
+            <div class="form-group">
+                <label>Settle Payment Mode</label>
+                <select id="paymentMode" class="form-select">
+                    <option value="UPI">UPI / QR Scan</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card Payment</option>
+                </select>
+            </div>
+
+            <button class="action-btn" onclick="confirmAndProcessCheckout()">Settle Balance & Send Bill</button>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomNo = urlParams.get('room');
+        const stayId = urlParams.get('stayId'); 
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCebk_0DBBu5w0cvWP0lUKqQanmiwoC42U",
+            authDomain: "booking-25ba4.firebaseapp.com",
+            projectId: "booking-25ba4"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let globalStayData = null;
+        let calculatedBalance = 0;
+        const todayStr = new Date().toLocaleDateString('sv'); 
+
+        async function loadStayDetails() {
+            if (!stayId) {
+                document.getElementById('loadingMessage').innerText = "Error: Invalid link pointer.";
+                return;
+            }
+            try {
+                let doc = await db.collection('bookings').doc(stayId).get();
+                if (!doc.exists) {
+                    document.getElementById('loadingMessage').innerText = "Stay profile already cleared or removed.";
+                    return;
+                }
+                
+                globalStayData = doc.data();
+                calculatedBalance = parseFloat(globalStayData.total || 0) - parseFloat(globalStayData.advance || 0);
+
+                document.getElementById('roomTitle').innerText = `Room: ${globalStayData.roomNo}`;
+                document.getElementById('gName').innerText = globalStayData.name;
+                document.getElementById('gPhone').innerText = globalStayData.phone;
+                document.getElementById('gCheckin').innerText = globalStayData.checkin;
+                document.getElementById('gCheckout').innerText = globalStayData.checkout || 'Not Specified';
+                document.getElementById('gTotal').innerText = globalStayData.total;
+                document.getElementById('gAdvance').innerText = globalStayData.advance || 0;
+                document.getElementById('gBalance').innerText = calculatedBalance;
+
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('checkoutContent').style.display = 'block';
+            } catch(e) {
+                console.error(e);
+                document.getElementById('loadingMessage').innerText = "Network database parsing error.";
+            }
+        }
+
+        async function confirmAndProcessCheckout() {
+            if (!confirm(`Confirm receipt of ₹${calculatedBalance} and execute room checkout?`)) return;
+
+            const selectedMode = document.getElementById('paymentMode').value;
+
+            try {
+                // 1. Mark booking lifecycle as completed inside 'bookings'
+                await db.collection('bookings').doc(stayId).update({
+                    checkedIn: 'Completed'
+                });
+
+                // 2. Automatically write record to your 'transactions' balance ledger
+                await db.collection('transactions').add({
+                    bookingId: stayId,
+                    roomNo: globalStayData.roomNo,
+                    guestName: globalStayData.name,
+                    date: todayStr,
+                    type: "Settle",
+                    amountPaid: calculatedBalance,
+                    paymentMode: selectedMode,
+                    recordedBy: "owner"
+                });
+
+                // 3. Create the text receipt payload
+                const receiptMessage = `*VINTAGE GARDEN RESORT*\n` +
+                                       `-----------------------------\n` +
+                                       `*Room No:* ${globalStayData.roomNo}\n` +
+                                       `*Guest:* ${globalStayData.name}\n` +
+                                       `*Check-In:* ${globalStayData.checkin}\n` +
+                                       `*Check-Out:* ${todayStr}\n` +
+                                       `-----------------------------\n` +
+                                       `Total Amount: ₹${globalStayData.total}\n` +
+                                       `Advance Paid: ₹${globalStayData.advance || 0}\n` +
+                                       `*Balance Paid:* ₹${calculatedBalance}\n` +
+                                       `*Payment Mode:* ${selectedMode}\n\n` +
+                                       `Status: *Paid & Settled* ✅\n\n` +
+                                       `Thank you for visiting! Have a safe journey home. ✨`;
+
+                // 4. Fire Native Share pop-up (WhatsApp/Email)
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: 'Vintage Garden Resort Invoice',
+                            text: receiptMessage
+                        });
+                        window.location.href = 'room_details.html';
+                    } catch(err) {
+                        // If sharing window closed, head back cleanly anyway
+                        window.location.href = 'room_details.html';
+                    }
+                } else {
+                    // Direct browser link fallback for desktop computers
+                    window.open(`https://api.whatsapp.com/send?phone=${globalStayData.phone}&text=${encodeURIComponent(receiptMessage)}`, '_blank');
+                    window.location.href = 'room_details.html';
+                }
+
+            } catch (err) {
+                alert("Error recording checkout data: " + err.message);
+            }
+        }
+
+        window.onload = loadStayDetails;
+    </script>
+</body>
+</html>

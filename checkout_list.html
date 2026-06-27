@@ -16,20 +16,32 @@
             --primary-blue: #2563eb;
             --warning-orange: #ea580c;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-color); display: flex; justify-content: center; padding: 20px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: start; min-height: 100vh; padding: 20px; }
         
         .web-app-container {
-            width: 100%; max-width: 480px; background: #fff; min-height: 85vh;
-            border-radius: 16px; border: 1px solid var(--border-color); padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column;
+            width: 100%; max-width: 480px; background: #fcfcfd; min-height: 85vh;
+            border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; overflow: hidden;
         }
-        .header { display: flex; align-items: center; margin-bottom: 20px; }
-        .back-btn { background: none; border: none; cursor: pointer; margin-right: 12px; display: flex; align-items: center; }
-        h2 { font-size: 20px; font-weight: 800; text-transform: uppercase; }
         
-        .list-container { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
-        .stay-card { background: #fff; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.01); }
+        /* Default Header & Navigation Menu Bar */
+        .header { padding: 20px 20px 10px 20px; display: flex; align-items: center; background: #fff; }
+        .logo-badge { background-color: #0f172a; color: white; font-weight: 800; padding: 6px 10px; border-radius: 6px; font-size: 14px; margin-right: 12px; }
+        .app-title { font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #000; }
+
+        .nav-tabs { display: flex; background: #fff; border-bottom: 2px solid var(--border-color); }
+        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px 0; font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; cursor: pointer; }
+        .tab-item.active { color: var(--primary-blue); border-bottom: 3px solid var(--primary-blue); background: #f8fafc; }
+        .tab-item svg { width: 22px; height: 22px; margin-bottom: 4px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+        .page-title-bar { padding: 14px 20px; display: flex; align-items: center; background: #fff; border-bottom: 1px solid var(--border-color); }
+        .back-btn { background: none; border: none; cursor: pointer; margin-right: 12px; display: flex; align-items: center; }
+        .page-heading { font-size: 16px; font-weight: 700; text-transform: uppercase; }
+        
+        /* List Layout Elements */
+        .list-container { display: flex; flex-direction: column; gap: 12px; padding: 20px; }
+        .stay-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.01); }
         .stay-info h3 { font-size: 18px; font-weight: 800; color: #000; margin-bottom: 4px; }
         .stay-info p { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
         
@@ -42,14 +54,38 @@
 <body>
 
     <div class="web-app-container">
-        <div class="header">
+        <header class="header">
+            <div class="logo-badge">DR</div>
+            <h1 class="app-title">Demo Resort</h1>
+        </header>
+
+        <nav class="nav-tabs">
+            <div class="tab-item active" onclick="window.location.href='index.html'">
+                <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Dashboard
+            </div>
+            <div class="tab-item" onclick="window.location.href='addbill.html'">
+                <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+                New bill
+            </div>
+            <div class="tab-item" onclick="window.location.href='viewbill.html'">
+                <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                View bill
+            </div>
+            <div class="tab-item">
+                <svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                Account
+            </div>
+        </nav>
+
+        <div class="page-title-bar">
             <button class="back-btn" onclick="window.location.href='index.html'">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             </button>
-            <h2>Checkout Menu</h2>
+            <h2 class="page-heading">Checkout Menu</h2>
         </div>
 
-        <div id="loadingText" style="text-align:center; color:gray; margin-top:30px;">Scanning active stays...</div>
+        <div id="loadingText" style="text-align:center; color:gray; margin-top:40px; font-size:14px;">Scanning active stays...</div>
         <div class="list-container" id="activeStaysList"></div>
     </div>
 
@@ -69,7 +105,7 @@
                 const listContainer = document.getElementById('activeStaysList');
                 listContainer.innerHTML = '';
                 
-                // Get only currently checked-in files
+                // Fetch live occupants inside rooms from single cs1 data location
                 let snap = await db.collection('bookings').where('checkedIn', '==', true).get();
                 
                 document.getElementById('loadingText').style.display = 'none';
@@ -97,6 +133,7 @@
                 });
             } catch (err) {
                 document.getElementById('loadingText').innerText = "Failed to load check-out records.";
+                console.error(err);
             }
         }
 

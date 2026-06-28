@@ -28,7 +28,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
@@ -242,7 +242,7 @@
                 <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 Dashboard
             </a>
-            <a class="tab-item" href="#" onclick="handleProtectedNavigation('addbill.html')">
+            <a class="tab-item" href="addbill.html">
                 <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
                 New bill
             </a>
@@ -367,20 +367,23 @@
     </div>
 
     <script>
-        // REPLACE THIS ADDRESS WITH YOUR ACTUAL OWNER EMAIL TO GRANT ACCESS
-        const OWNER_EMAIL = "your_owner_email@example.com";
+        // TARGET OWNER ACCOUNT MAIL SPECIFIED BY GUEST
+        const OWNER_EMAIL = "demo.booking2026@gmail.com";
 
-        function isUserOwner() {
-            const user = auth.currentUser;
-            return user && user.email === OWNER_EMAIL;
+        function verifyOwnerSession() {
+            const activeUser = auth.currentUser;
+            if (activeUser && activeUser.email === OWNER_EMAIL) {
+                return true;
+            }
+            return false;
         }
 
-        function handleProtectedNavigation(targetUrl) {
-            if (!isUserOwner()) {
+        function triggerAddRedirect(roomName, targetDate) {
+            if (!verifyOwnerSession()) {
                 alert("Owner only access this");
                 return;
             }
-            window.location.href = targetUrl;
+            window.location.href = `new.html?room=${encodeURIComponent(roomName)}&date=${targetDate}`;
         }
 
         function showDashboardView() {
@@ -528,15 +531,14 @@
                                 </div>`;
                         } else {
                             if (isPastDate) {
-                                // Clear blank design without "+ Add Booking" links for history entries
                                 listDiv.innerHTML += `
                                     <div class="past-empty-card">
                                         <span>Room ${roomName}</span>
-                                        <span style="font-size: 12px; font-style: italic;">No Booking Recorded</span>
+                                        <span style="font-size: 12px; font-style: italic; color:#94a3b8;">No Booking Recorded</span>
                                     </div>`;
                             } else {
                                 listDiv.innerHTML += `
-                                    <a href="#" onclick="event.preventDefault(); handleProtectedNavigation('new.html?room=${encodeURIComponent(roomName)}&date=${dateStr}')" class="empty-room-card">
+                                    <a href="#" onclick="event.preventDefault(); triggerAddRedirect('${roomName}', '${dateStr}')" class="empty-room-card">
                                         <span>Room ${roomName}</span>
                                         <span class="plus-badge">+ Add Booking</span>
                                     </a>`;
@@ -610,7 +612,7 @@
         }
 
         function openEditModal(docId){
-            if (!isUserOwner()) {
+            if (!verifyOwnerSession()) {
                 alert("Owner only access this");
                 return;
             }
@@ -636,3 +638,46 @@
             document.getElementById('editError').textContent = '';
             db.collection('bookings').doc(currentEditId).update({
                 name: document.getElementById('editName').value.trim(),
+                phone: document.getElementById('editPhone').value.trim(),
+                checkin: document.getElementById('editCheckin').value.trim(),
+                checkout: document.getElementById('editCheckout').value.trim(),
+                roomNo: document.getElementById('editRoomNo').value.trim(),
+                total: parseFloat(document.getElementById('editTotal').value.trim()),
+                advance: parseFloat(document.getElementById('editAdvance').value.trim())
+            }).then(() => {
+                closeEditModal();
+                if(selectedDate) showBookingsOnDate(selectedDate);
+            }).catch(e=>{ document.getElementById('editError').textContent=e.message; });
+        }
+
+        function openDeleteModal(docId){
+            if (!verifyOwnerSession()) {
+                alert("Owner only access this");
+                return;
+            }
+            currentDeleteId = docId;
+            db.collection('bookings').doc(docId).get().then(doc=>{
+                currentDeleteData = doc.data();
+                document.getElementById('deleteText').innerHTML =
+                    `<b>Name:</b> ${currentDeleteData.name}<br>
+                     <b>Room:</b> ${currentDeleteData.roomNo}<br>
+                     <b>Check-in:</b> ${currentDeleteData.checkin}<br>
+                     <b>Check-out:</b> ${currentDeleteData.checkout}<br>
+                     <b>Phone:</b> ${currentDeleteData.phone}`;
+                document.getElementById('deleteError').textContent = '';
+                document.getElementById('deleteModalBg').style.display = '';
+            });
+        }
+        function closeDeleteModal(){
+            document.getElementById('deleteModalBg').style.display='none';
+            currentDeleteId = null; currentDeleteData = null;
+        }
+        function submitDelete(){
+            db.collection('bookings').doc(currentDeleteId).delete().then(()=>{
+                closeDeleteModal();
+                if(selectedDate) showBookingsOnDate(selectedDate);
+            }).catch(e=>{ document.getElementById('deleteError').textContent=e.message; });
+        }
+    </script>
+</body>
+</html>

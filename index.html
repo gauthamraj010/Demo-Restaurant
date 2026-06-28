@@ -259,16 +259,16 @@
         .past-empty-card { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; color: #94a3b8; font-weight: 500; font-size: 14px; }
         .plus-badge { background: #2979ff; color: white; border-radius: 6px; padding: 2px 8px; font-size: 14px; font-weight: 800; }
         
-        .action-btn { margin-top: 8px; margin-right: 6px; cursor: pointer; padding: 5px 14px; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
-        .edit-btn { background: #ffa726; color: #fff; }
-        .view-bill-btn { background: #10b981; color: #fff; }
-        .delete-btn { background: #ef5350; color: #fff; }
+        .action-btn { margin-top: 8px; margin-right: 6px; cursor: pointer; padding: 5px 14px; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; text-transform: uppercase; display: inline-block; }
+        .edit-btn { background: #ffa726 !important; color: #fff !important; }
+        .view-bill-btn { background: #10b981 !important; color: #fff !important; }
+        .delete-btn { background: #ef5350 !important; color: #fff !important; }
         
         .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 2000; }
         .modal { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.15); width: 90%; max-width: 360px; }
         .modal input { width: 100%; margin-bottom: 10px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
-        .modal-btn-row { display: flex; justify-content: flex-end; margin-top: 12px; gap: 8px; }
-        .modal-btn-row button { padding: 6px 14px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-weight: 600; }
+        .modal-btn-row { display: flex; justify-content: flex-end; margin-top: 12px; gap: 8px; align-items: center; }
+        .modal-btn-row button { padding: 6px 14px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-weight: 600; font-size: 13px; }
         .modal-title { margin-bottom: 16px; font-weight: bold; font-size: 18px; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 6px; }
         .error { color: #e53935; margin-bottom: 8px; font-size: 13px; }
         
@@ -368,6 +368,27 @@
         </div>
     </div>
 
+    <div id="customAlertModalBg" class="modal-bg" style="display:none; z-index: 3000;">
+        <div class="modal">
+            <div class="modal-title" id="customAlertTitle">Alert</div>
+            <div id="customAlertText" style="font-size:14px; line-height:1.5; margin-bottom:15px; color: var(--text-main);"></div>
+            <div class="modal-btn-row">
+                <button type="button" class="action-btn view-bill-btn" style="margin-top:0;" onclick="closeCustomAlert()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="customConfirmModalBg" class="modal-bg" style="display:none; z-index: 3000;">
+        <div class="modal">
+            <div class="modal-title">Confirm Action</div>
+            <div id="customConfirmText" style="font-size:14px; line-height:1.5; margin-bottom:15px; color: var(--text-main);"></div>
+            <div class="modal-btn-row">
+                <button type="button" onclick="closeCustomConfirm(false)">Cancel</button>
+                <button type="button" class="action-btn delete-btn" style="margin-top:0;" onclick="closeCustomConfirm(true)">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <div id="loginModal" class="modal-bg" style="display:none;">
         <form class="modal" onsubmit="event.preventDefault();loginWithEmail();">
             <div class="modal-title">Admin Login</div>
@@ -375,7 +396,7 @@
             <input type="email" id="loginEmail" placeholder="Email" required autocomplete="username">
             <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
             <div class="modal-btn-row">
-                <button type="submit" class="action-btn edit-btn" style="border:none;">Login</button>
+                <button type="submit" class="action-btn edit-btn" style="margin-top:0;">Login</button>
             </div>
         </form>
     </div>
@@ -393,7 +414,7 @@
             <input type="number" id="editAdvance" placeholder="Advance Amount" required>
             <div class="modal-btn-row">
                 <button type="button" onclick="closeEditModal()">Cancel</button>
-                <button type="submit" class="action-btn edit-btn" style="border:none; margin-top:0;">Save</button>
+                <button type="submit" class="action-btn edit-btn" style="margin-top:0;">Save</button>
             </div>
         </form>
     </div>
@@ -403,7 +424,7 @@
             <div class="modal-title" id="settledBillTitle">Settled Bill Summary</div>
             <div id="settledBillContent" class="settled-bill-box"></div>
             <div class="modal-btn-row">
-                <button type="button" class="action-btn edit-btn" style="border:none; margin-top:0;" onclick="closeSettledBillModal()">Close Bill</button>
+                <button type="button" class="action-btn edit-btn" style="margin-top:0;" onclick="closeSettledBillModal()">Close Bill</button>
             </div>
         </div>
     </div>
@@ -415,7 +436,7 @@
             <div id="deleteError" class="error"></div>
             <div class="modal-btn-row">
                 <button type="button" onclick="closeDeleteModal()">Cancel</button>
-                <button type="button" class="action-btn delete-btn" style="border:none; margin-top:0;" onclick="submitDelete()">Delete</button>
+                <button type="button" class="action-btn delete-btn" style="margin-top:0;" onclick="submitDelete()">Delete</button>
             </div>
         </div>
     </div>
@@ -423,6 +444,29 @@
     <script>
         // TARGET OWNER ACCOUNT MAIL SPECIFIED BY GUEST
         const OWNER_EMAIL = "demo.booking2026@gmail.com";
+
+        // Helper functions to substitute alert and confirm popups
+        let confirmCallback = null;
+        function showCustomAlert(message, title="Notice") {
+            document.getElementById('customAlertTitle').innerText = title;
+            document.getElementById('customAlertText').innerText = message;
+            document.getElementById('customAlertModalBg').style.display = 'flex';
+        }
+        function closeCustomAlert() {
+            document.getElementById('customAlertModalBg').style.display = 'none';
+        }
+        function showCustomConfirm(message, callback) {
+            confirmCallback = callback;
+            document.getElementById('customConfirmText').innerText = message;
+            document.getElementById('customConfirmModalBg').style.display = 'flex';
+        }
+        function closeCustomConfirm(status) {
+            document.getElementById('customConfirmModalBg').style.display = 'none';
+            if(confirmCallback) {
+                confirmCallback(status);
+                confirmCallback = null;
+            }
+        }
 
         function verifyOwnerSession() {
             const activeUser = auth.currentUser;
@@ -434,7 +478,7 @@
 
         function triggerAddRedirect(roomName, targetDate) {
             if (!verifyOwnerSession()) {
-                alert("Owner only access this");
+                showCustomAlert("Owner only access this", "Access Denied");
                 return;
             }
             window.location.href = `new.html?room=${encodeURIComponent(roomName)}&date=${targetDate}`;
@@ -516,11 +560,13 @@
         }
 
         function logoutSession(){
-            if(confirm("Are you sure you want to log out?")) {
-                auth.signOut()
-                    .then(() => { console.log("Logged out successfully"); })
-                    .catch(e => { alert("Error signing out: " + e.message); });
-            }
+            showCustomConfirm("Are you sure you want to log out?", function(confirmed){
+                if(confirmed) {
+                    auth.signOut()
+                        .then(() => { console.log("Logged out successfully"); })
+                        .catch(e => { showCustomAlert("Error signing out: " + e.message, "Error"); });
+                }
+            });
         }
 
         function changeMonth(diff){
@@ -581,7 +627,7 @@
                             if (isSettled) {
                                 actionButtonsHTML = `<button class="action-btn view-bill-btn" onclick="openSettledBillMiniWindow('${data.id}')">View Bill</button>`;
                             } else if (isPastDate) {
-                                actionButtonsHTML = `<button class="action-btn view-bill-btn" style="background:#34495e;" onclick="window.location.href='room_details.html'">View Runtime Details</button>`;
+                                actionButtonsHTML = `<button class="action-btn view-bill-btn" style="background:#34495e !important;" onclick="window.location.href='room_details.html'">View Runtime Details</button>`;
                             } else {
                                 actionButtonsHTML = `
                                     <button class="action-btn edit-btn" onclick="openEditModal('${data.id}')">Edit</button>
@@ -683,7 +729,7 @@
                 
                 document.getElementById('settledBillContent').innerHTML = billWindowHTML;
                 document.getElementById('settledBillModalBg').style.display = 'flex';
-            }).catch(err => alert("Error accessing ledger log: " + err.message));
+            }).catch(err => showCustomAlert("Error accessing ledger log: " + err.message, "Error"));
         }
 
         function closeSettledBillModal() {
@@ -692,7 +738,7 @@
 
         function openEditModal(docId){
             if (!verifyOwnerSession()) {
-                alert("Owner only access this");
+                showCustomAlert("Owner only access this", "Access Denied");
                 return;
             }
             currentEditId = docId;
@@ -706,7 +752,7 @@
                 document.getElementById('editTotal').value = data.total || '';
                 document.getElementById('editAdvance').value = data.advance || '';
                 document.getElementById('editError').textContent = '';
-                document.getElementById('editModalBg').style.display = '';
+                document.getElementById('editModalBg').style.display = 'flex';
             });
         }
         function closeEditModal(){
@@ -731,7 +777,7 @@
 
         function openDeleteModal(docId){
             if (!verifyOwnerSession()) {
-                alert("Owner only access this");
+                showCustomAlert("Owner only access this", "Access Denied");
                 return;
             }
             currentDeleteId = docId;
@@ -744,7 +790,7 @@
                      <b>Check-out:</b> ${currentDeleteData.checkout}<br>
                      <b>Phone:</b> ${currentDeleteData.phone}`;
                 document.getElementById('deleteError').textContent = '';
-                document.getElementById('deleteModalBg').style.display = '';
+                document.getElementById('deleteModalBg').style.display = 'flex';
             });
         }
         function closeDeleteModal(){

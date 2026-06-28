@@ -34,7 +34,7 @@
         .app-title { font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #000; }
 
         .nav-tabs { display: flex; background: #fff; border-bottom: 2px solid var(--border-color); }
-        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px 0; font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; cursor: pointer; }
+        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px 0; font-size: 11px; font-weight: 600; color: var(--text-muted); text-decoration: none; cursor: pointer; text-align: center; }
         .tab-item.active { color: var(--primary-blue); border-bottom: 3px solid var(--primary-blue); background: #f8fafc; }
         .tab-item svg { width: 22px; height: 22px; margin-bottom: 4px; fill: none; stroke: currentColor; stroke-width: 2; }
 
@@ -58,16 +58,23 @@
         .status-checkout-pending { background: #ffedd5; color: #ea580c; border: 1px dashed #ea580c; }
 
         .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
-        .modal { background: #fff; border-radius: 16px; padding: 24px; width: 100%; max-width: 400px; }
-        .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .modal { background: #fff; border-radius: 16px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 20px 25px rgba(0,0,0,0.15); }
+        .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; text-transform: uppercase; }
         .guest-details-box { background: #f8fafc; padding: 14px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; line-height: 1.6; border: 1px solid var(--border-color); }
-        .action-btn { width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; margin-top: 8px; }
+        
+        .action-grid-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+        .action-btn { width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; border: none; text-transform: uppercase; display: inline-block; text-align: center; }
         .btn-checkin { background: var(--success-green); color: white; }
         .btn-walkin { background: var(--primary-blue); color: white; }
         .btn-cancel { background: #e5e7eb; color: var(--text-main); }
-        .modal input { width: 100%; padding: 10px 12px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; }
+        .btn-add-bill { background: #3498db; color: white; }
+        .btn-edit-bill { background: #ea580c; color: white; }
         
-        .bill-item-row { display: flex; justify-content: space-between; font-size: 13px; color: #4b5563; padding: 2px 0; border-bottom: 1px dashed #e5e7eb; }
+        .modal input, .modal select { width: 100%; padding: 10px 12px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; font-weight: 600; }
+        .bill-item-row { display: flex; justify-content: space-between; font-size: 13px; color: #4b5563; padding: 4px 0; border-bottom: 1px dashed #e5e7eb; }
+        
+        .payment-option-card { border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; font-weight: 700; display: flex; justify-content: space-between; align-items: center; background: #fff; }
+        .payment-option-card:hover { background: #f8fafc; border-color: var(--primary-blue); }
     </style>
 </head>
 <body>
@@ -87,9 +94,9 @@
                 <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
                 New bill
             </div>
-            <div class="tab-item">
+            <div class="tab-item" onclick="window.location.href='pendingorder.html'">
                 <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                View bill
+                Pending Orders
             </div>
             <div class="tab-item">
                 <svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
@@ -143,7 +150,7 @@
 
         function fetchAllRoomsParallel() {
             const roomPromises = customRoomsList.map(roomName => checkSingleRoomStatus(roomName));
-            Promise.all(roomPromises).catch(err => console.error("Parallel error:", err));
+            Promise.all(roomPromises).catch(err => console.error("Parallel lookup load error:", err));
         }
 
         async function checkSingleRoomStatus(roomName) {
@@ -212,7 +219,6 @@
             modalBg.style.display = 'flex';
 
             if (room.status === 'StayBack' || room.status === 'CheckoutPending') {
-                // Calculate food & extra accumulated bills dynamically
                 let additionalChargesTotal = 0;
                 let additionalBillsHTML = "";
                 
@@ -233,21 +239,20 @@
                 let finalPendingBalance = (baseRoomRent - advancePaid) + additionalChargesTotal;
 
                 modalContent.innerHTML = `
-                    <div class="modal-title">Checkout Option (${roomName})</div>
+                    <div class="modal-title">Operational Hub (${roomName})</div>
                     <div class="guest-details-box">
                         <b>Guest Name:</b> ${room.data.name}<br>
                         <b>Phone:</b> ${room.data.phone}<br>
-                        <b>Check-In:</b> ${room.data.checkin}<br>
-                        <b>Check-Out:</b> ${room.data.checkout}<br>
+                        <b>Stay Span:</b> ${room.data.checkin} › ${room.data.checkout}<br>
                         <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
-                        <b>Room Rent:</b> ₹${baseRoomRent}<br>
-                        <b>Advance Paid:</b> ₹${advancePaid}<br>
+                        <b>Room Base Rent:</b> ₹${baseRoomRent}<br>
+                        <b>Advance Provided:</b> ₹${advancePaid}<br>
                         
                         ${additionalChargesTotal > 0 ? `
                             <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
-                            <div style="font-weight: 700; color: var(--primary-blue); margin-bottom: 4px;">Additional Bills:</div>
+                            <div style="font-weight: 700; color: var(--primary-blue); margin-bottom: 4px;">Accumulated Room Charges:</div>
                             ${additionalBillsHTML}
-                            <div style="text-align: right; margin-top: 4px; font-weight: 700;">Total Extra: ₹${additionalChargesTotal}</div>
+                            <div style="text-align: right; margin-top: 4px; font-weight: 700;">Extra Charge Total: ₹${additionalChargesTotal}</div>
                         ` : ''}
                         
                         <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
@@ -255,8 +260,14 @@
                             Pending Balance: ₹${finalPendingBalance}
                         </span>
                     </div>
-                    <button class="action-btn btn-checkin" onclick="processCheckoutClose('${room.docId}')">Settle Balance & Check-Out</button>
-                    <button class="action-btn btn-cancel" onclick="closeModal()">Close</button>
+
+                    <div class="action-grid-buttons">
+                        <button class="action-btn btn-add-bill" onclick="window.location.href='addbill.html'">➕ Add Bill</button>
+                        <button class="action-btn btn-edit-bill" onclick="triggerExtraBillsReset('${room.docId}', '${roomName}')">📝 Edit Bills</button>
+                    </div>
+
+                    <button class="action-btn btn-checkin" onclick="openPaymentSelectionWindow('${room.docId}', ${finalPendingBalance})">Settle Balance & Check-Out</button>
+                    <button class="action-btn btn-cancel" style="margin-top:8px;" onclick="closeModal()">Close</button>
                 `;
             } else if (room.status === 'Reserved') {
                 modalContent.innerHTML = `
@@ -272,16 +283,71 @@
                 `;
             } else {
                 modalContent.innerHTML = `
-                    <div class="modal-title">Walk-In Guest (${roomName})</div>
+                    <div class="modal-title">Walk-In Registration (${roomName})</div>
                     <input type="text" id="walkInName" placeholder="Guest Name" required>
                     <input type="text" id="walkInPhone" placeholder="Phone Number" required>
                     <input type="number" id="walkInTotal" placeholder="Total Amount" required>
                     <input type="number" id="walkInAdvance" placeholder="Advance Paid" required>
-                    <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px; font-weight:700;">CHECK-OUT DATE:</label>
+                    <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px; font-weight:700;">CHECK-OUT TARGET DATE:</label>
                     <input type="date" id="walkInCheckoutDate" required>
                     <button class="action-btn btn-walkin" onclick="saveWalkInAndCheckIn('${roomName}')">Save & Check-In</button>
                     <button class="action-btn btn-cancel" onclick="closeModal()">Cancel</button>
                 `;
+            }
+        }
+
+        function triggerExtraBillsReset(docId, roomNo) {
+            if (confirm(`Do you want to clear/reset all added extra food & service bills linked to Room ${roomNo}?`)) {
+                db.collection('bookings').doc(docId).update({
+                    extraBills: []
+                }).then(() => {
+                    alert("Room ledger bills reset safely.");
+                    closeModal();
+                    preloadRoomsLayout();
+                }).catch(err => alert("Error updating sheet: " + err.message));
+            }
+        }
+
+        // Mini prompt view modal frame for routing transaction types
+        function openPaymentSelectionWindow(docId, pendingAmt) {
+            const modalContent = document.getElementById('modalContent');
+            modalContent.innerHTML = `
+                <div class="modal-title">Select Payment Mode</div>
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:8px; margin-bottom:14px; font-weight:700; font-size:14px; color:#166534; text-align:center;">
+                    Collected Settle Amount: ₹${pendingAmt}
+                </div>
+                
+                <div class="payment-option-card" onclick="commitFinalizedCheckout('${docId}', 'Cash')">
+                    <span>💵 Cash Payment</span> ➡️
+                </div>
+                <div class="payment-option-card" onclick="commitFinalizedCheckout('${docId}', 'UPI / QR Scan')">
+                    <span>📱 UPI / Online Transfer</span> ➡️
+                </div>
+                <div class="payment-option-card" onclick="commitFinalizedCheckout('${docId}', 'Card')">
+                    <span>💳 Credit/Debit Card</span> ➡️
+                </div>
+                <div class="payment-option-card" onclick="commitFinalizedCheckout('${docId}', 'Split Settlement')">
+                    <span>⚖️ Split/Multi-mode Payment</span> ➡️
+                </div>
+
+                <button class="action-btn btn-cancel" style="margin-top:14px;" onclick="preloadRoomsLayout()">🔙 Back</button>
+            `;
+        }
+
+        async function commitFinalizedCheckout(docId, selectedMode) {
+            try {
+                // Clear state atomically, recording payment details on data document safely
+                await db.collection('bookings').doc(docId).update({
+                    checkedIn: "Completed",
+                    paymentMode: selectedMode,
+                    checkoutSettledTimestamp: new Date().toISOString()
+                });
+                
+                alert(`Checked out successfully! Settle Option logged: [${selectedMode}]`);
+                closeModal();
+                preloadRoomsLayout();
+            } catch (err) {
+                alert("Checkout submission process fault error: " + err.message);
             }
         }
 
@@ -292,17 +358,6 @@
                 closeModal();
                 preloadRoomsLayout();
             }).catch(err => alert("Error updating check-in: " + err));
-        }
-
-        function processCheckoutClose(docId) {
-            if(confirm("Confirm balance collection settlement and free up room?")) {
-                db.collection('bookings').doc(docId).update({
-                    checkedIn: "Completed"
-                }).then(() => {
-                    closeModal();
-                    preloadRoomsLayout();
-                }).catch(err => alert("Error clearing checkout sheet: " + err));
-            }
         }
 
         function saveWalkInAndCheckIn(roomName) {

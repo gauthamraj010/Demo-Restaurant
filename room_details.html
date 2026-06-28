@@ -132,7 +132,7 @@
                     <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
                     New bill
                 </div>
-                <div class="tab-item" onclick="window.location.href='pendingorder.html'">
+                <div class="tab-item" onclick="window.location.href='pending.html'">
                     <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     Pending Orders
                 </div>
@@ -171,7 +171,6 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // Authentic State Sync Guard Observer 
         auth.onAuthStateChanged(user => {
             const loginSection = document.getElementById('loginSection');
             const dashboardSection = document.getElementById('protectedDashboardSection');

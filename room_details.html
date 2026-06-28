@@ -338,7 +338,7 @@
                     </div>
                     
                     <label>Check-Out Target Date *</label>
-                    <input type="date" id="walkInCheckoutDate">
+                    <input type="date" id="walkInCheckoutDate" min="${todayStr}">
                     
                     <button class="action-btn btn-walkin" onclick="saveWalkInAndCheckIn('${roomName}')">Save & Check-In</button>
                     <button class="action-btn btn-cancel" onclick="closeModal()">Cancel</button>
@@ -347,8 +347,6 @@
         }
 
         function triggerExtraBillsReset(docId, roomNo) {
-            // Using in-modal error output instead of native browser confirm if preferred, 
-            // but standard confirm handles branching window choices. Left as standard for safety.
             if (confirm(`Do you want to clear/reset all added extra food & service bills linked to Room ${roomNo}?`)) {
                 db.collection('bookings').doc(docId).update({
                     extraBills: []
@@ -409,7 +407,6 @@
         }
 
         function saveWalkInAndCheckIn(roomName) {
-            // Reset visibility of banner
             document.getElementById('modalWarningBanner').style.display = 'none';
 
             const name = document.getElementById('walkInName').value.trim();
@@ -420,7 +417,6 @@
             const kidsInput = document.getElementById('walkInKids').value;
             const checkoutDate = document.getElementById('walkInCheckoutDate').value;
 
-            // Strict Validation checks loaded into custom inner UI banner layout
             if (!name) { showModalWarning("Guest Name is mandatory."); return; }
             
             const phoneRegex = /^\d{10}$/;
@@ -437,6 +433,12 @@
             if (adultsInput === "") { showModalWarning("No. of Adult Pax is mandatory."); return; }
             if (kidsInput === "") { showModalWarning("No. of Kid Pax is mandatory."); return; }
             if (!checkoutDate) { showModalWarning("Checkout Target Date is mandatory."); return; }
+
+            // Strict Validation Rule: Checkout must be present date or future date
+            if (checkoutDate < todayStr) { 
+                showModalWarning("Error: Check-out target date cannot be a past date. Choose today or a future date."); 
+                return; 
+            }
 
             db.collection('bookings').add({
                 roomNo: roomName,

@@ -98,7 +98,6 @@
             color: var(--text-muted);
             text-decoration: none;
             cursor: pointer;
-            transition: all 0.2s ease;
         }
 
         .tab-item svg {
@@ -178,7 +177,6 @@
             cursor: pointer;
             text-decoration: none;
             display: inline-block;
-            transition: all 0.2s ease;
         }
 
         .manage-btn:hover {
@@ -214,16 +212,20 @@
         
         .action-btn { margin-top: 8px; margin-right: 6px; cursor: pointer; padding: 5px 14px; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
         .edit-btn { background: #ffa726; color: #fff; }
-        .view-bill-btn { background: #34495e; color: #fff; }
+        .view-bill-btn { background: #10b981; color: #fff; }
         .delete-btn { background: #ef5350; color: #fff; }
         
         .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-        .modal { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.15); width: 90%; max-width: 360px; }
+        .modal { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.15); width: 90%; max-width: 380px; }
         .modal input { width: 100%; margin-bottom: 10px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
         .modal-btn-row { display: flex; justify-content: flex-end; margin-top: 12px; gap: 8px; }
         .modal-btn-row button { padding: 6px 14px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-weight: 600; }
-        .modal-title { margin-bottom: 16px; font-weight: bold; font-size: 18px; }
+        .modal-title { margin-bottom: 16px; font-weight: bold; font-size: 18px; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 6px; }
         .error { color: #e53935; margin-bottom: 8px; font-size: 13px; }
+        
+        /* Direct Invoice Box inside Dashboard Modal View */
+        .settled-bill-box { background: #f8fafc; padding: 12px; border-radius: 8px; font-size: 13.5px; line-height: 1.6; border: 1px solid #e2e8f0; margin-bottom: 12px; }
+        .bill-item-row { display: flex; justify-content: space-between; font-size: 12.5px; color: #475569; padding: 2px 0; border-bottom: 1px dashed #cbd5e1; }
     </style>
 </head>
 <body>
@@ -340,6 +342,16 @@
                 <button type="submit" class="action-btn edit-btn" style="border:none; margin-top:0;">Save</button>
             </div>
         </form>
+    </div>
+
+    <div id="settledBillModalBg" class="modal-bg" style="display:none;">
+        <div class="modal">
+            <div class="modal-title" id="settledBillTitle">Settled Bill Summary</div>
+            <div id="settledBillContent" class="settled-bill-box"></div>
+            <div class="modal-btn-row">
+                <button type="button" class="action-btn edit-btn" style="border:none; margin-top:0;" onclick="closeSettledBillModal()">Close Bill</button>
+            </div>
+        </div>
     </div>
 
     <div id="deleteModalBg" class="modal-bg" style="display:none;">
@@ -459,10 +471,16 @@
                     customRoomsList.forEach(roomName => {
                         if (roomBookingsMap[roomName]) {
                             const data = roomBookingsMap[roomName];
+                            const isSettled = data.checkedIn === "Completed";
                             
                             let actionButtonsHTML = "";
-                            if (isPastDate) {
-                                actionButtonsHTML = `<button class="action-btn view-bill-btn" onclick="window.location.href='room_details.html'">View Bill</button>`;
+                            
+                            // If a booking is settled, hide edit/delete everywhere and show view directly
+                            if (isSettled) {
+                                actionButtonsHTML = `<button class="action-btn view-bill-btn" onclick="openSettledBillMiniWindow('${data.id}')">View Bill</button>`;
+                            } else if (isPastDate) {
+                                // Past active but un-settled room tracking defaults safely
+                                actionButtonsHTML = `<button class="action-btn view-bill-btn" style="background:#34495e;" onclick="window.location.href='room_details.html'">View Runtime Details</button>`;
                             } else {
                                 actionButtonsHTML = `
                                     <button class="action-btn edit-btn" onclick="openEditModal('${data.id}')">Edit</button>
@@ -471,13 +489,16 @@
                             }
 
                             listDiv.innerHTML += `
-                                <div class="booking-card">
-                                     <div style="font-size:15px; font-weight:800; color:#1e293b; margin-bottom:4px; text-transform:uppercase;">Room: ${roomName}</div>
-                                     <b>Name:</b> ${data.name}<br>
+                                <div class="booking-card" style="${isSettled ? 'background:#f0fdf4; border-color:#bbf7d0;' : ''}">
+                                     <div style="font-size:15px; font-weight:800; color:#1e293b; margin-bottom:4px; text-transform:uppercase; display:flex; justify-content:space-between;">
+                                         <span>Room: ${roomName}</span>
+                                         ${isSettled ? '<span style="color:#166534; font-size:11px; background:#dcfce7; padding:2px 8px; border-radius:12px;">✅ SETTLED</span>' : ''}
+                                     </div>
+                                     <b>Guest Name:</b> ${data.name}<br>
                                      <b>Check-in:</b> ${data.checkin}<br>
                                      <b>Check-out:</b> ${data.checkout}<br>
-                                     <b>Total:</b> ₹${data.total}<br>
-                                     <b>Advance:</b> ₹${data.advance}<br>
+                                     <b>Total Rent:</b> ₹${data.total}<br>
+                                     <b>Advance Paid:</b> ₹${data.advance}<br>
                                      <b>Phone:</b> ${data.phone}<br>
                                      <span style="font-size:11px; font-weight:700; color:#475569; background:#cbd5e1; padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px;">
                                          Created By: ${data.createdBy || 'owner'}
@@ -500,6 +521,65 @@
                     document.getElementById('bookings-list').innerHTML =
                         `<div style="color:red;text-align:center;margin:17px 0;">Error loading workspace data.</div>`;
                 });
+        }
+
+        // Mini window logic for compiling and rendering settled logs directly
+        function openSettledBillMiniWindow(docId) {
+            db.collection('bookings').doc(docId).get().then(doc => {
+                if(!doc.exists) return;
+                const data = doc.data();
+                
+                document.getElementById('settledBillTitle').innerText = `Room Invoice (${data.roomNo})`;
+                
+                let additionalChargesTotal = 0;
+                let additionalBillsHTML = "";
+                
+                if (data.extraBills && Array.isArray(data.extraBills)) {
+                    data.extraBills.forEach(bill => {
+                        additionalChargesTotal += parseFloat(bill.amount) || 0;
+                        let inlineDesc = bill.particular.replace(/\n/g, ", ");
+                        additionalBillsHTML += `
+                            <div class="bill-item-row">
+                                <span>📌 ${bill.billType}: ${inlineDesc}</span>
+                                <b>₹${bill.amount}</b>
+                            </div>`;
+                    });
+                }
+
+                let baseRoomRent = parseFloat(data.total) || 0;
+                let advancePaid = parseFloat(data.advance) || 0;
+                
+                let billWindowHTML = `
+                    <b>Guest Name:</b> ${data.name}<br>
+                    <b>Phone:</b> ${data.phone}<br>
+                    <b>Stay Range:</b> ${data.checkin} to ${data.checkout}<br>
+                    <hr style="margin: 8px 0; border:0; border-top: 1px solid #eee;">
+                    <b>Base Room Rent:</b> ₹${baseRoomRent}<br>
+                    <b>Advance Provided:</b> ₹${advancePaid}<br>
+                    
+                    ${additionalChargesTotal > 0 ? `
+                        <hr style="margin: 8px 0; border:0; border-top:1px solid #eee;">
+                        <div style="font-weight:700; color:#2563eb; margin-bottom: 2px;">Extra Point-of-Sale Items:</div>
+                        ${additionalBillsHTML}
+                    ` : ''}
+                    
+                    <hr style="margin: 8px 0; border:0; border-top: 1px solid #eee;">
+                    <div style="font-size:14px; font-weight:800; color:#166534; display:flex; justify-content:space-between;">
+                        <span>Final Balance Owed:</span>
+                        <span>₹0 (Paid & Closed)</span>
+                    </div>
+                    <div style="margin-top:4px; font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase;">
+                        💳 Mode: ${data.paymentMode || 'Settled'}
+                    </div>
+                `;
+                
+                document.getElementById('settledBillContent').innerHTML = billWindowHTML;
+                document.getElementById('settledBillModalBg').style.display = 'flex';
+            }).catch(err => alert("Error accessing ledger log: " + err.message));
+        }
+
+        function closeSettledBillModal() {
+            document.getElementById('settledBillModalBg').style.display = 'none';
         }
 
         function openEditModal(docId){
@@ -556,11 +636,4 @@
             currentDeleteId = null; currentDeleteData = null;
         }
         function submitDelete(){
-            db.collection('bookings').doc(currentDeleteId).delete().then(()=>{
-                closeDeleteModal();
-                if(selectedDate) showBookingsOnDate(selectedDate);
-            }).catch(e=>{ document.getElementById('deleteError').textContent=e.message; });
-        }
-    </script>
-</body>
-</html>
+            db.collection('bookings').doc(currentDeleteId).delete().then(()=>{\n                closeDeleteModal();\n                if(selectedDate) showBookingsOnDate(selectedDate);\n            }).catch(e=>{ document.getElementById('deleteError').textContent=e.message; });\n        }\n    </script>\n</body>\n</html>

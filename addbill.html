@@ -31,7 +31,7 @@
         .header { padding: 20px 20px 10px 20px; display: flex; align-items: center; background: #fff; justify-content: space-between; }
         .logo-badge { background-color: #0f172a; color: white; font-weight: 800; padding: 6px 10px; border-radius: 6px; font-size: 14px; margin-right: 12px; }
         .app-title { font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #000; }
-        .logout-btn { background: none; border: none; color: var(--occupied-red); font-weight: 700; font-size: 12px; cursor: pointer; text-transform: uppercase; }
+        .logout-btn { background: none; border: none; color: var(--occupied-red); font-weight: 700; font-size: 12px; cursor: pointer; text-transform: uppercase; display: none; }
 
         .nav-tabs { display: flex; background: #fff; border-bottom: 2px solid var(--border-color); }
         .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px 0; font-size: 11px; font-weight: 600; color: var(--text-muted); text-decoration: none; cursor: pointer; text-align: center; }
@@ -46,7 +46,7 @@
         
         .alert-banner { display: none; background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; font-size: 13px; font-weight: 700; padding: 12px; border-radius: 8px; margin-bottom: 14px; text-align: center; line-height: 1.4; }
 
-        /* Rooms Matrix Layout */
+        /* Rooms Matrix Grid Layout */
         .room-matrix-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
         .room-block-card { background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; padding: 22px 10px; text-align: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
         .room-block-card h3 { font-size: 20px; font-weight: 800; margin-bottom: 8px; color: #000; }
@@ -83,63 +83,63 @@
         .form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
         .form-input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; font-weight: 600; background: #fff; }
 
-        /* Auth Screen Styling */
-        .login-container { padding: 30px 20px; display: flex; flex-direction: column; justify-content: center; flex-grow: 1; background: #fff; }
-        .login-title { font-size: 20px; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; text-align: center; }
-        .login-subtitle { font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px; font-weight: 500; }
+        /* Auth Verification Styles */
+        .login-container { padding: 10px 0; display: flex; flex-direction: column; justify-content: center; }
+        .login-title { font-size: 18px; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; text-align: center; margin-top: 10px; }
+        .login-subtitle { font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 20px; font-weight: 500; }
     </style>
 </head>
 <body>
 
     <div class="web-app-container">
-        <div id="loginSection" class="login-container" style="display: none;">
-            <h2 class="login-title">Gatekeeper Verification</h2>
-            <p class="login-subtitle">Please authenticate to manage billing updates</p>
-            <div id="authErrorBanner" class="alert-banner"></div>
-            
-            <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px; font-weight:700; text-transform:uppercase;">Email Address</label>
-            <input type="email" id="loginEmail" class="form-input" style="margin-bottom:12px;" placeholder="e.g., staff@demoresort.com">
-            
-            <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px; font-weight:700; text-transform:uppercase;">Password</label>
-            <input type="password" id="loginPassword" class="form-input" style="margin-bottom:12px;" placeholder="••••••••">
-            
-            <button class="action-btn btn-submit-main" style="margin-top: 6px;" onclick="handleLoginRequest()">Login & Continue</button>
+        <header class="header">
+            <div class="header-left" style="display:flex; align-items:center;">
+                <div class="logo-badge">DR</div>
+                <h1 class="app-title">Demo Resort</h1>
+            </div>
+            <button id="logoutBtn" class="logout-btn" onclick="handleLogoutRequest()">Logout</button>
+        </header>
+
+        <nav class="nav-tabs">
+            <div class="tab-item" onclick="window.location.href='index.html'">
+                <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Dashboard
+            </div>
+            <div class="tab-item active" onclick="window.location.href='addbill.html'">
+                <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+                Add bill
+            </div>
+            <div class="tab-item" onclick="window.location.href='pendingorder.html'">
+                <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Pending Orders
+            </div>
+            <div class="tab-item">
+                <svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                Account
+            </div>
+        </nav>
+
+        <div class="page-title-bar">
+            <h2 class="page-heading" id="viewSectionHeading">Select Target Room</h2>
         </div>
 
-        <div id="protectedBillingSection" style="display: none; flex-direction: column; width:100%;">
-            <header class="header">
-                <div class="header-left" style="display:flex; align-items:center;">
-                    <div class="logo-badge">DR</div>
-                    <h1 class="app-title">Demo Resort</h1>
-                </div>
-                <button class="logout-btn" onclick="handleLogoutRequest()">Logout</button>
-            </header>
+        <div class="content-workspace">
+            <div id="workspaceAlertBanner" class="alert-banner"></div>
 
-            <nav class="nav-tabs">
-                <div class="tab-item" onclick="window.location.href='index.html'">
-                    <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                    Dashboard
-                </div>
-                <div class="tab-item active" onclick="window.location.href='addbill.html'">
-                    <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
-                    Add bill
-                </div>
-                <div class="tab-item" onclick="window.location.href='pending.html'">
-                    <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    Pending Orders
-                </div>
-                <div class="tab-item">
-                    <svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                    Account
-                </div>
-            </nav>
-
-            <div class="page-title-bar">
-                <h2 class="page-heading" id="viewSectionHeading">Select Target Room</h2>
+            <div id="loginSection" class="login-container" style="display: none;">
+                <h2 class="login-title">Gatekeeper Verification</h2>
+                <p class="login-subtitle">Please authenticate to manage billing updates</p>
+                
+                <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px; font-weight:700; text-transform:uppercase;">Email Address</label>
+                <input type="email" id="loginEmail" class="form-input" style="margin-bottom:12px;" placeholder="e.g., staff@demoresort.com">
+                
+                <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px; font-weight:700; text-transform:uppercase;">Password</label>
+                <input type="password" id="loginPassword" class="form-input" style="margin-bottom:12px;" placeholder="••••••••">
+                
+                <button class="btn-submit-main" style="margin-top: 6px;" onclick="handleLoginRequest()">Login & Continue</button>
             </div>
 
-            <div class="content-workspace">
-                <div id="workspaceAlertBanner" class="alert-banner"></div>
+            <div id="billingMainWorkspace" style="display: none; flex-direction: column; width:100%;">
                 <div id="roomSelectionWorkspace" class="room-matrix-grid"></div>
                 <div id="loadingWorkspaceText" class="status-msg">Scanning resort layout records...</div>
 
@@ -173,24 +173,24 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="modal-overlay" id="workflowSplitModal">
-        <div class="modal-box">
-            <h3 class="modal-title" id="splitModalTitle">Room Options</h3>
-            <button class="btn-modal-option" onclick="routeToBillingSubspace('food')">1. Food Bill</button>
-            <button class="btn-modal-option" onclick="routeToBillingSubspace('extra')">2. Extra Bill</button>
-            <button class="modal-btn btn-m-cancel" style="width:100%;" onclick="closeModalWindow('workflowSplitModal')">Cancel</button>
+        <div class="modal-overlay" id="workflowSplitModal">
+            <div class="modal-box">
+                <h3 class="modal-title" id="splitModalTitle">Room Options</h3>
+                <button class="btn-modal-option" onclick="routeToBillingSubspace('food')">1. Food Bill</button>
+                <button class="btn-modal-option" onclick="routeToBillingSubspace('extra')">2. Extra Bill</button>
+                <button class="modal-btn btn-m-cancel" style="width:100%;" onclick="closeModalWindow('workflowSplitModal')">Cancel</button>
+            </div>
         </div>
-    </div>
 
-    <div class="modal-overlay" id="orderConfirmationModal">
-        <div class="modal-box">
-            <h3 class="modal-title">Confirm Bill Details</h3>
-            <div id="orderConfirmationSummaryText" style="font-size:13px; line-height:1.6; background:#f8fafc; border:1px solid var(--border-color); padding:12px; border-radius:8px; margin-bottom:12px; max-height:220px; overflow-y:auto; white-space:pre-wrap;"></div>
-            <div class="modal-btn-row">
-                <button class="modal-btn btn-m-cancel" onclick="closeModalWindow('orderConfirmationModal')">Cancel</button>
-                <button class="modal-btn btn-m-confirm" onclick="writeBillRecordToDatabase()">Add</button>
+        <div class="modal-overlay" id="orderConfirmationModal">
+            <div class="modal-box">
+                <h3 class="modal-title">Confirm Bill Details</h3>
+                <div id="orderConfirmationSummaryText" style="font-size:13px; line-height:1.6; background:#f8fafc; border:1px solid var(--border-color); padding:12px; border-radius:8px; margin-bottom:12px; max-height:220px; overflow-y:auto; white-space:pre-wrap;"></div>
+                <div class="modal-btn-row">
+                    <button class="modal-btn btn-m-cancel" onclick="closeModalWindow('orderConfirmationModal')">Cancel</button>
+                    <button class="modal-btn btn-m-confirm" onclick="writeBillRecordToDatabase()">Add</button>
+                </div>
             </div>
         </div>
     </div>
@@ -201,7 +201,7 @@
         let roomsState = {};
 
         // -------------------------------------------------------------
-        // CS1: Room Bookings & Balanced Sheet Database (booking-25ba4)
+        // CS1: Room Bookings Database (booking-25ba4)
         // -------------------------------------------------------------
         const roomApp = firebase.initializeApp({
             apiKey: "AIzaSyCebk_0DBBu5w0cvWP0lUKqQanmiwoC42U",
@@ -211,7 +211,7 @@
         const roomDb = firebase.firestore(roomApp);
 
         // -------------------------------------------------------------
-        // CS2: Food Menu & Staff Profiles Database (wild-sapiens-station)
+        // CS2: Food Menu & Staff Access Database (wild-sapiens-station)
         // -------------------------------------------------------------
         const billingApp = firebase.initializeApp({
             apiKey: "AIzaSyBNXgwgzr579prCiMl72QFa8qCIw7ZwihI",
@@ -233,22 +233,23 @@
         let idToName = {};
         let singleItemPayload = {};
 
-        // Authentic State Observer for Staff Verification
+        // Realtime State Observer for Access Management
         auth.onAuthStateChanged(user => {
             const loginSection = document.getElementById('loginSection');
-            const billingSection = document.getElementById('protectedBillingSection');
-            const authError = document.getElementById('authErrorBanner');
+            const billingWorkspace = document.getElementById('billingMainWorkspace');
+            const logoutBtn = document.getElementById('logoutBtn');
             
-            authError.style.display = 'none';
+            hideGlobalError();
 
             if (user) {
-                // Confirming roles (owner / staff) are present inside the wild-sapiens-station record registry
+                // Fetch verified profile role designation matrix from user registry
                 billingDb.collection('users').doc(user.uid).get().then(profileSnap => {
                     if (profileSnap.exists) {
                         const role = profileSnap.data().role;
                         if (role === 'owner' || role === 'staff') {
                             loginSection.style.display = 'none';
-                            billingSection.style.display = 'flex';
+                            billingWorkspace.style.display = 'flex';
+                            logoutBtn.style.display = 'block';
                             initAppWorkspace();
                             return;
                         }
@@ -256,31 +257,30 @@
                     displayGlobalError("Operational access denied. Role validation failure.");
                     auth.signOut();
                 }).catch(err => {
-                    displayGlobalError("Profile confirmation fault: " + err.message);
+                    displayGlobalError("Profile verification failure: " + err.message);
                     auth.signOut();
                 });
             } else {
-                billingSection.style.display = 'none';
+                billingWorkspace.style.display = 'none';
+                logoutBtn.style.display = 'none';
                 loginSection.style.display = 'flex';
+                document.getElementById('loadingWorkspaceText').style.display = 'block';
             }
         });
 
         function handleLoginRequest() {
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
-            const errorBanner = document.getElementById('authErrorBanner');
-            errorBanner.style.display = 'none';
+            hideGlobalError();
 
             if(!email || !password) {
-                errorBanner.innerText = "Please complete all authentication inputs.";
-                errorBanner.style.display = 'block';
+                displayGlobalError("Please fill out all operational authentication inputs.");
                 return;
             }
 
             auth.signInWithEmailAndPassword(email, password)
                 .catch(err => {
-                    errorBanner.innerText = "Authentication Failed: " + err.message;
-                    errorBanner.style.display = 'block';
+                    displayGlobalError("Authentication Failed: " + err.message);
                 });
         }
 

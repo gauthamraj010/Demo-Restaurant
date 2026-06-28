@@ -196,7 +196,7 @@
             margin: 10px;
             box-shadow: 0 3px 12px #eee;
         }
-        .calendar { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; background: #f1f1f1; padding: 10px; border-radius: 6px; }
+        .calendar { display: grid; grid-template-columns: repeat(7,1fr); gap: 8px; background: #f1f1f1; padding: 10px; border-radius: 6px; }
         .calendar-day { height: 40px; background: #fff; border: 1px solid #ccc; border-radius: 4px; display: flex; justify-content: center; align-items: center; cursor: pointer; font-weight: 600; }
         .calendar-day.selected { background: #2979ff; color: #fff; border-color: #2979ff; }
         .month-controls { display: flex; justify-content: center; align-items: center; margin-bottom: 14px; }
@@ -215,15 +215,14 @@
         .view-bill-btn { background: #10b981; color: #fff; }
         .delete-btn { background: #ef5350; color: #fff; }
         
-        .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-        .modal { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.15); width: 90%; max-width: 380px; }
+        .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .modal { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.15); width: 90%; max-width: 360px; }
         .modal input { width: 100%; margin-bottom: 10px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
         .modal-btn-row { display: flex; justify-content: flex-end; margin-top: 12px; gap: 8px; }
         .modal-btn-row button { padding: 6px 14px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-weight: 600; }
         .modal-title { margin-bottom: 16px; font-weight: bold; font-size: 18px; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 6px; }
         .error { color: #e53935; margin-bottom: 8px; font-size: 13px; }
         
-        /* Direct Invoice Box inside Dashboard Modal View */
         .settled-bill-box { background: #f8fafc; padding: 12px; border-radius: 8px; font-size: 13.5px; line-height: 1.6; border: 1px solid #e2e8f0; margin-bottom: 12px; }
         .bill-item-row { display: flex; justify-content: space-between; font-size: 12.5px; color: #475569; padding: 2px 0; border-bottom: 1px dashed #cbd5e1; }
     </style>
@@ -377,7 +376,13 @@
             document.getElementById('dashboardTab').classList.remove('active');
             document.getElementById('dashboardView').style.display = 'none';
             document.getElementById('calendarContainer').style.display = 'block';
+            
+            // Set today as selected date by default if nothing is selected yet
+            if (!selectedDate) {
+                selectedDate = new Date().toLocaleDateString('sv');
+            }
             renderCalendar();
+            showBookingsOnDate(selectedDate);
         }
 
         const firebaseConfig = {
@@ -475,11 +480,9 @@
                             
                             let actionButtonsHTML = "";
                             
-                            // If a booking is settled, hide edit/delete everywhere and show view directly
                             if (isSettled) {
                                 actionButtonsHTML = `<button class="action-btn view-bill-btn" onclick="openSettledBillMiniWindow('${data.id}')">View Bill</button>`;
                             } else if (isPastDate) {
-                                // Past active but un-settled room tracking defaults safely
                                 actionButtonsHTML = `<button class="action-btn view-bill-btn" style="background:#34495e;" onclick="window.location.href='room_details.html'">View Runtime Details</button>`;
                             } else {
                                 actionButtonsHTML = `
@@ -509,7 +512,7 @@
                                 </div>`;
                         } else {
                             listDiv.innerHTML += `
-                                <a href="nee.html?room=${encodeURIComponent(roomName)}&date=${dateStr}" class="empty-room-card">
+                                <a href="new.html?room=${encodeURIComponent(roomName)}&date=${dateStr}" class="empty-room-card">
                                     <span>Room ${roomName}</span>
                                     <span class="plus-badge">+ Add Booking</span>
                                 </a>`;
@@ -523,7 +526,6 @@
                 });
         }
 
-        // Mini window logic for compiling and rendering settled logs directly
         function openSettledBillMiniWindow(docId) {
             db.collection('bookings').doc(docId).get().then(doc => {
                 if(!doc.exists) return;
@@ -636,4 +638,11 @@
             currentDeleteId = null; currentDeleteData = null;
         }
         function submitDelete(){
-            db.collection('bookings').doc(currentDeleteId).delete().then(()=>{\n                closeDeleteModal();\n                if(selectedDate) showBookingsOnDate(selectedDate);\n            }).catch(e=>{ document.getElementById('deleteError').textContent=e.message; });\n        }\n    </script>\n</body>\n</html>
+            db.collection('bookings').doc(currentDeleteId).delete().then(()=>{
+                closeDeleteModal();
+                if(selectedDate) showBookingsOnDate(selectedDate);
+            }).catch(e=>{ document.getElementById('deleteError').textContent=e.message; });
+        }
+    </script>
+</body>
+</html>

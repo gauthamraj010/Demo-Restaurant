@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reception (1)</title>
+    <title>Reception - Dashboard</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -41,7 +41,6 @@
             padding: 20px;
         }
 
-        /* App Container mimicking mobile web view */
         .web-app-container {
             width: 100%;
             max-width: 480px;
@@ -56,7 +55,6 @@
             position: relative;
         }
 
-        /* Header Section based on Default.jpg */
         .header {
             padding: 20px 20px 10px 20px;
             display: flex;
@@ -83,7 +81,6 @@
             color: #000;
         }
 
-        /* Top Navigation Tabs */
         .nav-tabs {
             display: flex;
             background: #fff;
@@ -120,7 +117,6 @@
             background: #f8fafc;
         }
 
-        /* Main Workspace Menu List */
         .main-menu {
             padding: 20px;
             display: flex;
@@ -130,7 +126,6 @@
             flex: 1;
         }
 
-        /* Menu Action Cards */
         .menu-card {
             background: var(--card-bg);
             border-radius: 14px;
@@ -196,7 +191,6 @@
         .bg-staff { background-color: var(--color-staff); }
         .bg-menu { background-color: var(--color-menu); }
 
-        /* Integrated Calendar Section Styles */
         .calendar-container {
             padding: 15px 10px;
             background: #fff;
@@ -210,13 +204,19 @@
         .month-controls { display: flex; justify-content: center; align-items: center; margin-bottom: 14px; }
         .month-btn { background: #2979ff; color: #fff; border: none; border-radius: 7px; padding: 6px 15px; font-size: 14px; margin: 0 9px; font-weight: bold; cursor: pointer; }
         #month-label { font-size: 16px; font-weight: bold; }
-        #bookings-list { margin-top: 13px; }
-        .booking-card { background: #eaf8ee; margin: 6px 0; padding: 12px 10px; border-radius: 7px; border: 1px solid #89c6b4; line-height: 1.5; font-size: 14px; }
-        .action-btn { margin-top: 8px; margin-right: 6px; cursor: pointer; padding: 4px 12px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; }
+        
+        #bookings-list { margin-top: 13px; display: flex; flex-direction: column; gap: 10px; }
+        .booking-card { background: #eaf8ee; padding: 12px 14px; border-radius: 8px; border: 1px solid #89c6b4; line-height: 1.6; font-size: 14px; }
+        
+        .empty-room-card { background: #f8fafc; border: 2px dashed #cbd5e1; padding: 12px 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; text-decoration: none; color: var(--text-main); font-weight: 700; font-size: 14px; }
+        .empty-room-card:hover { background: #f1f5f9; border-color: #94a3b8; }
+        .plus-badge { background: #2979ff; color: white; border-radius: 6px; padding: 2px 8px; font-size: 14px; font-weight: 800; }
+        
+        .action-btn { margin-top: 8px; margin-right: 6px; cursor: pointer; padding: 5px 14px; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
         .edit-btn { background: #ffa726; color: #fff; }
+        .view-bill-btn { background: #34495e; color: #fff; }
         .delete-btn { background: #ef5350; color: #fff; }
         
-        /* Modals overrides */
         .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 2000; }
         .modal { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.15); width: 90%; max-width: 360px; }
         .modal input { width: 100%; margin-bottom: 10px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
@@ -224,18 +224,6 @@
         .modal-btn-row button { padding: 6px 14px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-weight: 600; }
         .modal-title { margin-bottom: 16px; font-weight: bold; font-size: 18px; }
         .error { color: #e53935; margin-bottom: 8px; font-size: 13px; }
-        
-        .new-booking-inline-btn {
-            display: block;
-            text-align: center;
-            background: #2979ff;
-            color: #fff;
-            font-weight: bold;
-            padding: 10px;
-            border-radius: 8px;
-            text-decoration: none;
-            margin-bottom: 15px;
-        }
     </style>
 </head>
 <body>
@@ -252,11 +240,11 @@
                 <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 Dashboard
             </a>
-            <a class="tab-item">
+            <a class="tab-item" href="addbill.html">
                 <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
                 New bill
             </a>
-            <a class="tab-item">
+            <a class="tab-item" href="room_details.html">
                 <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 View bill
             </a>
@@ -311,7 +299,6 @@
             </main>
 
             <div class="calendar-container" id="calendarContainer" style="display: none;">
-                <a href="https://menucard-fc3a39.gitlab.io/admin.html" class="new-booking-inline-btn">New Booking</a>
                 <h2 style="text-align:center; margin-bottom:11px; font-size: 18px;">Bookings Calendar</h2>
                 <div class="month-controls">
                     <button class="month-btn" onclick="changeMonth(-1)">&#8592; Prev</button>
@@ -393,6 +380,8 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
+        const customRoomsList = ["A-1", "Twin-1", "Twin-2", "Paddy", "P-1", "P-2", "Delux"];
+
         let calendarMonth = new Date().getMonth();
         let calendarYear = new Date().getFullYear();
         let selectedDate = null;
@@ -428,14 +417,6 @@
             document.getElementById('bookings-list').innerHTML = '';
         }
 
-        document.getElementById('editRoomNo').addEventListener('change', function() {
-            const val = this.value.trim();
-            if(val && (parseInt(val) < 1 || parseInt(val) > 7)) {
-                alert("Please select a room between 1 and 7.");
-                this.value = '';
-            }
-        });
-
         function renderCalendar(){
             const calDiv = document.getElementById('calendar');
             calDiv.innerHTML = '';
@@ -456,39 +437,68 @@
             }
         }
 
-        function showBookingsOnDate(dateStr){
+        function showBookingsOnDate(dateStr) {
+            const todayStr = new Date().toLocaleDateString('sv');
+            const isPastDate = dateStr < todayStr;
+
             db.collection('bookings')
-                .where('checkin','==',dateStr)
+                .where('checkin', '==', dateStr)
                 .get()
-                .then(snapshot=>{
+                .then(snapshot => {
                     const listDiv = document.getElementById('bookings-list');
                     listDiv.innerHTML = '';
-                    let found = false;
-                    snapshot.forEach(doc=>{
-                        found = true;
+                    
+                    let roomBookingsMap = {};
+                    snapshot.forEach(doc => {
                         const data = doc.data();
-                        listDiv.innerHTML +=
-                            `<div class="booking-card">
-                                 <b>Name:</b> ${data.name}<br>
-                                 <b>Room:</b> ${data.roomNo}<br>
-                                 <b>Check-in:</b> ${data.checkin}<br>
-                                 <b>Check-out:</b> ${data.checkout}<br>
-                                 <b>Total:</b> ₹${data.total}<br>
-                                 <b>Advance:</b> ₹${data.advance}<br>
-                                 <b>Phone:</b> ${data.phone}
-                                 <div>
-                                     <button class="action-btn edit-btn" onclick="openEditModal('${doc.id}')">Edit</button>
-                                     <button class="action-btn delete-btn" onclick="openDeleteModal('${doc.id}')">Delete</button>
-                                 </div>
-                             </div>`;
+                        if (data.roomNo) {
+                            roomBookingsMap[data.roomNo] = { id: doc.id, ...data };
+                        }
                     });
-                    if(!found){
-                        listDiv.innerHTML = `<div style='color:#888;text-align:center;margin:17px 0;'>No booking available.</div>`;
-                    }
+
+                    customRoomsList.forEach(roomName => {
+                        if (roomBookingsMap[roomName]) {
+                            const data = roomBookingsMap[roomName];
+                            
+                            let actionButtonsHTML = "";
+                            if (isPastDate) {
+                                actionButtonsHTML = `<button class="action-btn view-bill-btn" onclick="window.location.href='room_details.html'">View Bill</button>`;
+                            } else {
+                                actionButtonsHTML = `
+                                    <button class="action-btn edit-btn" onclick="openEditModal('${data.id}')">Edit</button>
+                                    <button class="action-btn delete-btn" onclick="openDeleteModal('${data.id}')">Delete</button>
+                                `;
+                            }
+
+                            listDiv.innerHTML += `
+                                <div class="booking-card">
+                                     <div style="font-size:15px; font-weight:800; color:#1e293b; margin-bottom:4px; text-transform:uppercase;">Room: ${roomName}</div>
+                                     <b>Name:</b> ${data.name}<br>
+                                     <b>Check-in:</b> ${data.checkin}<br>
+                                     <b>Check-out:</b> ${data.checkout}<br>
+                                     <b>Total:</b> ₹${data.total}<br>
+                                     <b>Advance:</b> ₹${data.advance}<br>
+                                     <b>Phone:</b> ${data.phone}<br>
+                                     <span style="font-size:11px; font-weight:700; color:#475569; background:#cbd5e1; padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px;">
+                                         Created By: ${data.createdBy || 'owner'}
+                                     </span>
+                                     <div>
+                                         ${actionButtonsHTML}
+                                     </div>
+                                </div>`;
+                        } else {
+                            listDiv.innerHTML += `
+                                <a href="nee.html?room=${encodeURIComponent(roomName)}&date=${dateStr}" class="empty-room-card">
+                                    <span>Room ${roomName}</span>
+                                    <span class="plus-badge">+ Add Booking</span>
+                                </a>`;
+                        }
+                    });
                 })
-                .catch(err=>{
+                .catch(err => {
+                    console.error(err);
                     document.getElementById('bookings-list').innerHTML =
-                        `<div style="color:red;text-align:center;margin:17px 0;">Error loading bookings.</div>`;
+                        `<div style="color:red;text-align:center;margin:17px 0;">Error loading workspace data.</div>`;
                 });
         }
 

@@ -82,11 +82,11 @@
 
         .modal-warning-banner { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; font-size: 13px; font-weight: 700; padding: 12px; border-radius: 8px; margin-bottom: 14px; display: none; text-align: center; line-height: 1.4; }
         
-        /* Merged Rooms Badges Styling */
-        .room-pill-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-        .room-pill { background: #e2e8f0; color: #334155; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; }
-        .merge-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 6px; font-weight: 600; }
-        .btn-merge-action { background: var(--primary-blue); color: white; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; text-transform: uppercase; }
+        /* Merged Rooms Layout Design Elements */
+        .group-pill-box { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+        .room-tag { background: #34d399; color: #064e3b; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+        .merge-row-item { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 8px; font-weight: 700; }
+        .btn-action-merge { background: var(--primary-blue); color: white; padding: 6px 12px; font-size: 11px; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -168,10 +168,19 @@
 
         async function checkSingleRoomStatus(roomName) {
             try {
-                // Adaptive Array Search support for group merge matching
+                // Backward-Compatible Query Mix: checks both array setups and plain string setups
                 let activeSnap = await db.collection('bookings')
-                                         .where('roomNo', 'array-contains', roomName)
-                                         .where('checkedIn', '==', true).get();
+                                         .where('checkedIn', '==', true)
+                                         .where('roomNo', 'in', [roomName, [roomName]])
+                                         .get();
+
+                // Fallback secondary structural lookups for complex multi-room arrays
+                if (activeSnap.empty) {
+                    activeSnap = await db.collection('bookings')
+                                           .where('checkedIn', '==', true)
+                                           .where('roomNo', 'array-contains', roomName)
+                                           .get();
+                }
 
                 if (!activeSnap.empty) {
                     let stayData = activeSnap.docs[0].data();
@@ -186,9 +195,16 @@
                 }
 
                 let reservedSnap = await db.collection('bookings')
-                                           .where('roomNo', 'array-contains', roomName)
                                            .where('checkin', '==', todayStr)
+                                           .where('roomNo', 'in', [roomName, [roomName]])
                                            .get();
+
+                if (reservedSnap.empty) {
+                    reservedSnap = await db.collection('bookings')
+                                             .where('checkin', '==', todayStr)
+                                             .where('roomNo', 'array-contains', roomName)
+                                             .get();
+                }
 
                 let freshReservation = reservedSnap.docs.find(d => d.data().checkedIn !== 'Completed' && d.data().checkedIn !== true);
 
@@ -266,14 +282,14 @@
                 let advancePaid = parseFloat(room.data.advance) || 0;
                 let finalPendingBalance = (baseRoomRent - advancePaid) + additionalChargesTotal;
 
-                // Build out clean array listing string for grouped display interfaces
-                let connectedRoomsHTML = "";
+                // Formulate current dynamic grouping display
+                let currentRoomsListHTML = "";
                 if (Array.isArray(room.data.roomNo)) {
                     room.data.roomNo.forEach(r => {
-                        connectedRoomsHTML += `<span class="room-pill">${r}</span>`;
+                        currentRoomsListHTML += `<span class="room-tag">${r}</span>`;
                     });
                 } else {
-                    connectedRoomsHTML = `<span class="room-pill">${roomName}</span>`;
+                    currentRoomsListHTML = `<span class="room-tag">${roomName}</span>`;
                 }
 
                 modalContent.innerHTML = `
@@ -282,7 +298,7 @@
                     <div class="guest-details-box">
                         <b>Guest Name:</b> ${room.data.name}<br>
                         <b>Phone:</b> ${room.data.phone}<br>
-                        <div style="margin: 4px 0;"><b>Active Rooms:</b> <div class="room-pill-container">${connectedRoomsHTML}</div></div>
+                        <div style="margin: 4px 0;"><b>Linked Rooms:</b><div class="group-pill-box">${currentRoomsListHTML}</div></div>
                         <b>Stay Span:</b> ${room.data.checkin} › ${room.data.checkout}<br>
                         <b>Pax Total:</b> Adults: ${room.data.adults || 0} | Kids: ${room.data.kids || 0}<br>
                         <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
@@ -291,9 +307,9 @@
                         
                         ${additionalChargesTotal > 0 ? `
                             <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
-                            <div style="font-weight: 700; color: var(--primary-blue); margin-bottom: 4px;">Accumulated Room Charges:</div>
+                            <div style="font-weight: 700; color: var(--primary-blue); margin-bottom: 4px;">Accumulated Charges:</div>
                             ${additionalBillsHTML}
-                            <div style="text-align: right; margin-top: 4px; font-weight: 700;">Extra Charge Total: ₹${additionalChargesTotal}</div>
+                            <div style="text-align: right; margin-top: 4px; font-weight: 700;">Extra Total: ₹${additionalChargesTotal}</div>
                         ` : ''}
                         
                         <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
@@ -308,7 +324,7 @@
                     </div>
 
                     <div class="action-grid-buttons">
-                        <button class="action-btn" style="background:#8b5cf6; color:white;" onclick="openMergeRoomsWindow('${room.docId}')">➕ Merge Room</button>
+                        <button class="action-btn" style="background:#8b5cf6; color:white;" onclick="openMergeEngineSubmenu('${room.docId}')">➕ Merge Room</button>
                         <button class="action-btn btn-cancel" onclick="closeModal()">Close</button>
                     </div>
 
@@ -366,69 +382,69 @@
             }
         }
 
-        // Dedicated interface window layer allowing fast multi room matching updates
-        function openMergeRoomsWindow(activeDocId) {
+        // Submenu tracking engine enabling quick group inclusion
+        function openMergeEngineSubmenu(activeDocId) {
             const modalContent = document.getElementById('modalContent');
-            
-            let emptyRoomsAvailable = [];
-            customRoomsList.forEach(rmName => {
-                if (roomsState[rmName] && roomsState[rmName].status === 'Available') {
-                    emptyRoomsAvailable.push(rmName);
+            let availableVacantRooms = [];
+
+            customRoomsList.forEach(rKey => {
+                if(roomsState[rKey] && roomsState[rKey].status === 'Available') {
+                    availableVacantRooms.push(rKey);
                 }
             });
 
-            let listHTML = "";
-            if (emptyRoomsAvailable.length === 0) {
-                listHTML = `<div style="text-align:center; padding:15px; color:var(--text-muted); font-size:13px; font-weight:600;">No empty/vacant rooms available to merge right now.</div>`;
+            let listRowsHTML = "";
+            if (availableVacantRooms.length === 0) {
+                listRowsHTML = `<div style="text-align:center; padding:16px; color:var(--text-muted); font-size:13px; font-weight:700;">No vacant rooms are currently available to merge.</div>`;
             } else {
-                emptyRoomsAvailable.forEach(rm => {
-                    listHTML += `
-                        <div class="merge-list-item">
-                            <span>🛏️ Room ${rm}</span>
-                            <button class="btn-merge-action" onclick="commitRoomMerge('${activeDocId}', '${rm}')">Link & Merge</button>
+                availableVacantRooms.forEach(vRoom => {
+                    listRowsHTML += `
+                        <div class="merge-row-item">
+                            <span>🛏️ Room ${vRoom}</span>
+                            <button class="btn-action-merge" onclick="executeRoomMergeAction('${activeDocId}', '${vRoom}')">Merge Room</button>
                         </div>`;
                 });
             }
 
             modalContent.innerHTML = `
-                <div class="modal-title">Merge Rooms to Sheet</div>
+                <div class="modal-title">Room Merging Engine</div>
                 <div id="modalWarningBanner" class="modal-warning-banner"></div>
-                <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px; font-weight:600; line-height:1.4;">
-                    Select an empty room below to add it to this booking. Both rooms will share a single balance ledger and check out together.
+                <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px; line-height:1.4; font-weight:600;">
+                    Select an empty room to merge it into this booking. They will instantly share the same balance sheet, food orders, and check out automatically together.
                 </p>
-                
-                <div style="max-height: 240px; overflow-y:auto; margin-bottom:14px;">
-                    ${listHTML}
+
+                <div style="max-height: 220px; overflow-y:auto; margin-bottom:14px;">
+                    ${listRowsHTML}
                 </div>
 
-                <button class="action-btn btn-cancel" onclick="preloadRoomsLayout()">Cancel & Go Back</button>
+                <button class="action-btn btn-cancel" onclick="preloadRoomsLayout()">🔙 Back to Hub</button>
             `;
         }
 
-        async function commitRoomMerge(docId, roomToMerge) {
+        async function executeRoomMergeAction(targetDocId, roomToAppend) {
             try {
-                const docRef = db.collection('bookings').doc(docId);
+                const docRef = db.collection('bookings').doc(targetDocId);
                 const snapshot = await docRef.get();
-                if (!snapshot.exists) return;
-                
-                let currentData = snapshot.data();
-                let updatedRoomsArray = [];
+                if(!snapshot.exists) return;
 
-                if (Array.isArray(currentData.roomNo)) {
-                    updatedRoomsArray = [...currentData.roomNo];
-                } else if (currentData.roomNo) {
-                    updatedRoomsArray.push(currentData.roomNo);
+                let currentRoomsData = snapshot.data().roomNo;
+                let finalRoomsArray = [];
+
+                if (Array.isArray(currentRoomsData)) {
+                    finalRoomsArray = [...currentRoomsData];
+                } else if (currentRoomsData) {
+                    finalRoomsArray.push(currentRoomsData);
                 }
 
-                if (!updatedRoomsArray.includes(roomToMerge)) {
-                    updatedRoomsArray.push(roomToMerge);
+                if (!finalRoomsArray.includes(roomToAppend)) {
+                    finalRoomsArray.push(roomToAppend);
                 }
 
-                await docRef.update({ roomNo: updatedRoomsArray });
+                await docRef.update({ roomNo: finalRoomsArray });
                 closeModal();
                 preloadRoomsLayout();
             } catch (err) {
-                showModalWarning("Failed to link rooms mapping: " + err.message);
+                showModalWarning("Failed to execute data merge: " + err.message);
             }
         }
 
@@ -525,7 +541,6 @@
                 return; 
             }
 
-            // Always write the initial booking room mapping structure as an array
             db.collection('bookings').add({
                 roomNo: [roomName],
                 name: name,

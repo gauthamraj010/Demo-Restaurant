@@ -80,8 +80,13 @@
         .payment-option-card { border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; font-weight: 700; display: flex; justify-content: space-between; align-items: center; background: #fff; }
         .payment-option-card:hover { background: #f8fafc; border-color: var(--primary-blue); }
 
-        /* Beautiful Clean In-Modal Warning Banner Layout */
         .modal-warning-banner { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; font-size: 13px; font-weight: 700; padding: 12px; border-radius: 8px; margin-bottom: 14px; display: none; text-align: center; line-height: 1.4; }
+        
+        /* Merged Rooms Badges Styling */
+        .room-pill-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+        .room-pill { background: #e2e8f0; color: #334155; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; }
+        .merge-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 6px; font-weight: 600; }
+        .btn-merge-action { background: var(--primary-blue); color: white; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -163,8 +168,9 @@
 
         async function checkSingleRoomStatus(roomName) {
             try {
+                // Adaptive Array Search support for group merge matching
                 let activeSnap = await db.collection('bookings')
-                                         .where('roomNo', '==', roomName)
+                                         .where('roomNo', 'array-contains', roomName)
                                          .where('checkedIn', '==', true).get();
 
                 if (!activeSnap.empty) {
@@ -180,7 +186,7 @@
                 }
 
                 let reservedSnap = await db.collection('bookings')
-                                           .where('roomNo', '==', roomName)
+                                           .where('roomNo', 'array-contains', roomName)
                                            .where('checkin', '==', todayStr)
                                            .get();
 
@@ -223,13 +229,12 @@
             }
         }
 
-        // Helper to cleanly surface inner-UI validation warnings inside active workflows
         function showModalWarning(msg) {
             const warningEl = document.getElementById('modalWarningBanner');
             if(warningEl) {
                 warningEl.innerText = msg;
                 warningEl.style.display = 'block';
-                document.getElementById('modalContent').scrollTop = 0; // Auto scroll up to show notice
+                document.getElementById('modalContent').scrollTop = 0; 
             }
         }
 
@@ -261,12 +266,23 @@
                 let advancePaid = parseFloat(room.data.advance) || 0;
                 let finalPendingBalance = (baseRoomRent - advancePaid) + additionalChargesTotal;
 
+                // Build out clean array listing string for grouped display interfaces
+                let connectedRoomsHTML = "";
+                if (Array.isArray(room.data.roomNo)) {
+                    room.data.roomNo.forEach(r => {
+                        connectedRoomsHTML += `<span class="room-pill">${r}</span>`;
+                    });
+                } else {
+                    connectedRoomsHTML = `<span class="room-pill">${roomName}</span>`;
+                }
+
                 modalContent.innerHTML = `
                     <div class="modal-title">Operational Hub (${roomName})</div>
                     <div id="modalWarningBanner" class="modal-warning-banner"></div>
                     <div class="guest-details-box">
                         <b>Guest Name:</b> ${room.data.name}<br>
                         <b>Phone:</b> ${room.data.phone}<br>
+                        <div style="margin: 4px 0;"><b>Active Rooms:</b> <div class="room-pill-container">${connectedRoomsHTML}</div></div>
                         <b>Stay Span:</b> ${room.data.checkin} › ${room.data.checkout}<br>
                         <b>Pax Total:</b> Adults: ${room.data.adults || 0} | Kids: ${room.data.kids || 0}<br>
                         <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
@@ -291,8 +307,12 @@
                         <button class="action-btn btn-edit-bill" onclick="triggerExtraBillsReset('${room.docId}', '${roomName}')">📝 Edit Bills</button>
                     </div>
 
-                    <button class="action-btn btn-checkin" onclick="openPaymentSelectionWindow('${room.docId}', ${finalPendingBalance})">Settle Balance & Check-Out</button>
-                    <button class="action-btn btn-cancel" style="margin-top:8px;" onclick="closeModal()">Close</button>
+                    <div class="action-grid-buttons">
+                        <button class="action-btn" style="background:#8b5cf6; color:white;" onclick="openMergeRoomsWindow('${room.docId}')">➕ Merge Room</button>
+                        <button class="action-btn btn-cancel" onclick="closeModal()">Close</button>
+                    </div>
+
+                    <button class="action-btn btn-checkin" style="margin-top:4px;" onclick="openPaymentSelectionWindow('${room.docId}', ${finalPendingBalance})">Settle Balance & Check-Out Group</button>
                 `;
             } else if (room.status === 'Reserved') {
                 modalContent.innerHTML = `
@@ -343,6 +363,72 @@
                     <button class="action-btn btn-walkin" onclick="saveWalkInAndCheckIn('${roomName}')">Save & Check-In</button>
                     <button class="action-btn btn-cancel" onclick="closeModal()">Cancel</button>
                 `;
+            }
+        }
+
+        // Dedicated interface window layer allowing fast multi room matching updates
+        function openMergeRoomsWindow(activeDocId) {
+            const modalContent = document.getElementById('modalContent');
+            
+            let emptyRoomsAvailable = [];
+            customRoomsList.forEach(rmName => {
+                if (roomsState[rmName] && roomsState[rmName].status === 'Available') {
+                    emptyRoomsAvailable.push(rmName);
+                }
+            });
+
+            let listHTML = "";
+            if (emptyRoomsAvailable.length === 0) {
+                listHTML = `<div style="text-align:center; padding:15px; color:var(--text-muted); font-size:13px; font-weight:600;">No empty/vacant rooms available to merge right now.</div>`;
+            } else {
+                emptyRoomsAvailable.forEach(rm => {
+                    listHTML += `
+                        <div class="merge-list-item">
+                            <span>🛏️ Room ${rm}</span>
+                            <button class="btn-merge-action" onclick="commitRoomMerge('${activeDocId}', '${rm}')">Link & Merge</button>
+                        </div>`;
+                });
+            }
+
+            modalContent.innerHTML = `
+                <div class="modal-title">Merge Rooms to Sheet</div>
+                <div id="modalWarningBanner" class="modal-warning-banner"></div>
+                <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px; font-weight:600; line-height:1.4;">
+                    Select an empty room below to add it to this booking. Both rooms will share a single balance ledger and check out together.
+                </p>
+                
+                <div style="max-height: 240px; overflow-y:auto; margin-bottom:14px;">
+                    ${listHTML}
+                </div>
+
+                <button class="action-btn btn-cancel" onclick="preloadRoomsLayout()">Cancel & Go Back</button>
+            `;
+        }
+
+        async function commitRoomMerge(docId, roomToMerge) {
+            try {
+                const docRef = db.collection('bookings').doc(docId);
+                const snapshot = await docRef.get();
+                if (!snapshot.exists) return;
+                
+                let currentData = snapshot.data();
+                let updatedRoomsArray = [];
+
+                if (Array.isArray(currentData.roomNo)) {
+                    updatedRoomsArray = [...currentData.roomNo];
+                } else if (currentData.roomNo) {
+                    updatedRoomsArray.push(currentData.roomNo);
+                }
+
+                if (!updatedRoomsArray.includes(roomToMerge)) {
+                    updatedRoomsArray.push(roomToMerge);
+                }
+
+                await docRef.update({ roomNo: updatedRoomsArray });
+                closeModal();
+                preloadRoomsLayout();
+            } catch (err) {
+                showModalWarning("Failed to link rooms mapping: " + err.message);
             }
         }
 
@@ -434,14 +520,14 @@
             if (kidsInput === "") { showModalWarning("No. of Kid Pax is mandatory."); return; }
             if (!checkoutDate) { showModalWarning("Checkout Target Date is mandatory."); return; }
 
-            // Strict Validation Rule: Checkout must be present date or future date
             if (checkoutDate < todayStr) { 
                 showModalWarning("Error: Check-out target date cannot be a past date. Choose today or a future date."); 
                 return; 
             }
 
+            // Always write the initial booking room mapping structure as an array
             db.collection('bookings').add({
-                roomNo: roomName,
+                roomNo: [roomName],
                 name: name,
                 phone: phone,
                 total: total,

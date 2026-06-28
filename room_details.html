@@ -79,6 +79,9 @@
         
         .payment-option-card { border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; font-weight: 700; display: flex; justify-content: space-between; align-items: center; background: #fff; }
         .payment-option-card:hover { background: #f8fafc; border-color: var(--primary-blue); }
+
+        /* Beautiful Clean In-Modal Warning Banner Layout */
+        .modal-warning-banner { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; font-size: 13px; font-weight: 700; padding: 12px; border-radius: 8px; margin-bottom: 14px; display: none; text-align: center; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -220,6 +223,16 @@
             }
         }
 
+        // Helper to cleanly surface inner-UI validation warnings inside active workflows
+        function showModalWarning(msg) {
+            const warningEl = document.getElementById('modalWarningBanner');
+            if(warningEl) {
+                warningEl.innerText = msg;
+                warningEl.style.display = 'block';
+                document.getElementById('modalContent').scrollTop = 0; // Auto scroll up to show notice
+            }
+        }
+
         function handleRoomClick(roomName) {
             const room = roomsState[roomName];
             if (room.status === 'Loading') return;
@@ -250,6 +263,7 @@
 
                 modalContent.innerHTML = `
                     <div class="modal-title">Operational Hub (${roomName})</div>
+                    <div id="modalWarningBanner" class="modal-warning-banner"></div>
                     <div class="guest-details-box">
                         <b>Guest Name:</b> ${room.data.name}<br>
                         <b>Phone:</b> ${room.data.phone}<br>
@@ -283,6 +297,7 @@
             } else if (room.status === 'Reserved') {
                 modalContent.innerHTML = `
                     <div class="modal-title">Pre-Booked Arrival (${roomName})</div>
+                    <div id="modalWarningBanner" class="modal-warning-banner"></div>
                     <div class="guest-details-box">
                         <b>Guest Name:</b> ${room.data.name}<br>
                         <b>Phone:</b> ${room.data.phone}<br>
@@ -297,6 +312,8 @@
                 modalContent.innerHTML = `
                     <div class="modal-title">Walk-In Registration (${roomName})</div>
                     
+                    <div id="modalWarningBanner" class="modal-warning-banner"></div>
+
                     <label>Guest Name *</label>
                     <input type="text" id="walkInName" placeholder="Enter guest full name">
                     
@@ -330,14 +347,15 @@
         }
 
         function triggerExtraBillsReset(docId, roomNo) {
+            // Using in-modal error output instead of native browser confirm if preferred, 
+            // but standard confirm handles branching window choices. Left as standard for safety.
             if (confirm(`Do you want to clear/reset all added extra food & service bills linked to Room ${roomNo}?`)) {
                 db.collection('bookings').doc(docId).update({
                     extraBills: []
                 }).then(() => {
-                    alert("Room ledger bills reset safely.");
                     closeModal();
                     preloadRoomsLayout();
-                }).catch(err => alert("Error updating sheet: " + err.message));
+                }).catch(err => showModalWarning("Error updating sheet: " + err.message));
             }
         }
 
@@ -345,6 +363,7 @@
             const modalContent = document.getElementById('modalContent');
             modalContent.innerHTML = `
                 <div class="modal-title">Select Payment Mode</div>
+                <div id="modalWarningBanner" class="modal-warning-banner"></div>
                 <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:8px; margin-bottom:14px; font-weight:700; font-size:14px; color:#166534; text-align:center;">
                     Collected Settle Amount: ₹${pendingAmt}
                 </div>
@@ -373,12 +392,10 @@
                     paymentMode: selectedMode,
                     checkoutSettledTimestamp: new Date().toISOString()
                 });
-                
-                alert(`Checked out successfully! Settle Option logged: [${selectedMode}]`);
                 closeModal();
                 preloadRoomsLayout();
             } catch (err) {
-                alert("Checkout submission process fault error: " + err.message);
+                showModalWarning("Checkout submission process fault error: " + err.message);
             }
         }
 
@@ -388,10 +405,13 @@
             }).then(() => {
                 closeModal();
                 preloadRoomsLayout();
-            }).catch(err => alert("Error updating check-in: " + err));
+            }).catch(err => showModalWarning("Error updating check-in: " + err));
         }
 
         function saveWalkInAndCheckIn(roomName) {
+            // Reset visibility of banner
+            document.getElementById('modalWarningBanner').style.display = 'none';
+
             const name = document.getElementById('walkInName').value.trim();
             const phone = document.getElementById('walkInPhone').value.trim();
             const totalInput = document.getElementById('walkInTotal').value;
@@ -400,23 +420,23 @@
             const kidsInput = document.getElementById('walkInKids').value;
             const checkoutDate = document.getElementById('walkInCheckoutDate').value;
 
-            // Validations (Image 305 requirements)
-            if (!name) { alert("Guest Name is mandatory."); return; }
+            // Strict Validation checks loaded into custom inner UI banner layout
+            if (!name) { showModalWarning("Guest Name is mandatory."); return; }
             
             const phoneRegex = /^\d{10}$/;
-            if (!phone || !phoneRegex.test(phone)) { alert("Phone Number is mandatory and must be exactly 10 digits."); return; }
+            if (!phone || !phoneRegex.test(phone)) { showModalWarning("Phone Number is mandatory and must be exactly 10 digits."); return; }
             
-            if (totalInput === "") { alert("Total Amount is mandatory."); return; }
+            if (totalInput === "") { showModalWarning("Total Amount is mandatory."); return; }
             const total = parseFloat(totalInput) || 0;
             
-            if (advanceInput === "") { alert("Advance Paid is mandatory."); return; }
+            if (advanceInput === "") { showModalWarning("Advance Paid is mandatory."); return; }
             const advance = parseFloat(advanceInput) || 0;
             
-            if (advance > total) { alert("Warning: Advance paid cannot be more than the total amount!"); return; }
+            if (advance > total) { showModalWarning("Warning: Advance paid cannot be more than the total amount!"); return; }
             
-            if (adultsInput === "") { alert("No. of Adult Pax is mandatory."); return; }
-            if (kidsInput === "") { alert("No. of Kid Pax is mandatory."); return; }
-            if (!checkoutDate) { alert("Checkout Target Date is mandatory."); return; }
+            if (adultsInput === "") { showModalWarning("No. of Adult Pax is mandatory."); return; }
+            if (kidsInput === "") { showModalWarning("No. of Kid Pax is mandatory."); return; }
+            if (!checkoutDate) { showModalWarning("Checkout Target Date is mandatory."); return; }
 
             db.collection('bookings').add({
                 roomNo: roomName,
@@ -434,7 +454,7 @@
             }).then(() => {
                 closeModal();
                 preloadRoomsLayout();
-            }).catch(err => alert("Error saving walk-in: " + err));
+            }).catch(err => showModalWarning("Error saving walk-in: " + err));
         }
 
         function closeModal() { document.getElementById('roomModalBg').style.display = 'none'; }

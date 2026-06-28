@@ -43,10 +43,11 @@
         .page-heading { font-size: 16px; font-weight: 700; text-transform: uppercase; }
 
         .rooms-grid { padding: 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-        .room-card { background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; padding: 22px 10px; text-align: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-        .room-number { font-size: 20px; font-weight: 800; margin-bottom: 8px; color: #000; }
+        .room-card { background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; padding: 18px 8px; text-align: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 110px; }
+        .room-number { font-size: 20px; font-weight: 800; margin-bottom: 4px; color: #000; }
+        .room-guest-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; padding: 0 4px; }
 
-        .room-status { font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }
+        .room-status { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; text-align: center; justify-content: center; max-width: 100%; }
         
         .spinner { border: 2px solid rgba(0, 0, 0, 0.1); border-top: 2px solid var(--primary-blue); border-radius: 50%; width: 12px; height: 12px; animation: spin 0.8s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -58,7 +59,7 @@
         .status-checkout-pending { background: #ffedd5; color: #ea580c; border: 1px dashed #ea580c; }
 
         .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
-        .modal { background: #fff; border-radius: 16px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 20px 25px rgba(0,0,0,0.15); }
+        .modal { background: #fff; border-radius: 16px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 20px 25px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
         .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; text-transform: uppercase; }
         .guest-details-box { background: #f8fafc; padding: 14px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; line-height: 1.6; border: 1px solid var(--border-color); }
         
@@ -70,7 +71,10 @@
         .btn-add-bill { background: #3498db; color: white; }
         .btn-edit-bill { background: #ea580c; color: white; }
         
+        .modal label { font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px; font-weight: 700; text-transform: uppercase; }
         .modal input, .modal select { width: 100%; padding: 10px 12px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; font-weight: 600; }
+        .pax-row { display: flex; gap: 10px; }
+        .pax-row > div { flex: 1; }
         .bill-item-row { display: flex; justify-content: space-between; font-size: 13px; color: #4b5563; padding: 4px 0; border-bottom: 1px dashed #e5e7eb; }
         
         .payment-option-card { border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; font-weight: 700; display: flex; justify-content: space-between; align-items: center; background: #fff; }
@@ -139,6 +143,7 @@
                 container.innerHTML += `
                     <div class="room-card" id="card-${roomName}" onclick="handleRoomClick('${roomName}')">
                         <div class="room-number">${roomName}</div>
+                        <div class="room-guest-label" id="guest-${roomName}">Please wait...</div>
                         <div class="room-status status-loading" id="status-${roomName}">
                             <div class="spinner"></div> Checking...
                         </div>
@@ -192,21 +197,26 @@
         function updateRoomUIState(roomName, status, data, docId) {
             roomsState[roomName] = { status: status, data: data, docId: docId };
             const badge = document.getElementById(`status-${roomName}`);
-            if (!badge) return;
+            const guestLabel = document.getElementById(`guest-${roomName}`);
+            if (!badge || !guestLabel) return;
             
             badge.className = 'room-status'; 
             if (status === 'StayBack') {
                 badge.classList.add('status-stayback');
-                badge.innerHTML = 'Stay Back';
+                badge.innerHTML = 'Arrived';
+                guestLabel.innerText = data.name || "No Name";
             } else if (status === 'CheckoutPending') {
                 badge.classList.add('status-checkout-pending');
                 badge.innerHTML = '⚠️ Checkout';
+                guestLabel.innerText = data.name || "No Name";
             } else if (status === 'Reserved') {
                 badge.classList.add('status-reserved');
                 badge.innerHTML = 'Pre-Booked';
+                guestLabel.innerText = data.name || "No Name";
             } else {
                 badge.classList.add('status-available');
                 badge.innerHTML = 'Available';
+                guestLabel.innerText = "Empty";
             }
         }
 
@@ -244,6 +254,7 @@
                         <b>Guest Name:</b> ${room.data.name}<br>
                         <b>Phone:</b> ${room.data.phone}<br>
                         <b>Stay Span:</b> ${room.data.checkin} › ${room.data.checkout}<br>
+                        <b>Pax Total:</b> Adults: ${room.data.adults || 0} | Kids: ${room.data.kids || 0}<br>
                         <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
                         <b>Room Base Rent:</b> ₹${baseRoomRent}<br>
                         <b>Advance Provided:</b> ₹${advancePaid}<br>
@@ -276,7 +287,8 @@
                         <b>Guest Name:</b> ${room.data.name}<br>
                         <b>Phone:</b> ${room.data.phone}<br>
                         <b>Total:</b> ₹${room.data.total || 0}<br>
-                        <b>Advance Paid:</b> ₹${room.data.advance || 0}
+                        <b>Advance Paid:</b> ₹${room.data.advance || 0}<br>
+                        <b>Pax Details:</b> Adults: ${room.data.adults || 0}, Kids: ${room.data.kids || 0}
                     </div>
                     <button class="action-btn btn-checkin" onclick="processCheckIn('${room.docId}')">Confirm Check-In</button>
                     <button class="action-btn btn-cancel" onclick="closeModal()">Close</button>
@@ -284,12 +296,33 @@
             } else {
                 modalContent.innerHTML = `
                     <div class="modal-title">Walk-In Registration (${roomName})</div>
-                    <input type="text" id="walkInName" placeholder="Guest Name" required>
-                    <input type="text" id="walkInPhone" placeholder="Phone Number" required>
-                    <input type="number" id="walkInTotal" placeholder="Total Amount" required>
-                    <input type="number" id="walkInAdvance" placeholder="Advance Paid" required>
-                    <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px; font-weight:700;">CHECK-OUT TARGET DATE:</label>
-                    <input type="date" id="walkInCheckoutDate" required>
+                    
+                    <label>Guest Name *</label>
+                    <input type="text" id="walkInName" placeholder="Enter guest full name">
+                    
+                    <label>Phone Number *</label>
+                    <input type="tel" id="walkInPhone" placeholder="10-digit mobile number" maxlength="10">
+                    
+                    <label>Total Amount *</label>
+                    <input type="number" id="walkInTotal" placeholder="₹ Total base charges">
+                    
+                    <label>Advance Paid *</label>
+                    <input type="number" id="walkInAdvance" placeholder="₹ Paid advance amount">
+                    
+                    <div class="pax-row">
+                        <div>
+                            <label>No. of Pax [Adults] *</label>
+                            <input type="number" id="walkInAdults" placeholder="0" min="1">
+                        </div>
+                        <div>
+                            <label>No. of Pax [Kids] *</label>
+                            <input type="number" id="walkInKids" placeholder="0" min="0">
+                        </div>
+                    </div>
+                    
+                    <label>Check-Out Target Date *</label>
+                    <input type="date" id="walkInCheckoutDate">
+                    
                     <button class="action-btn btn-walkin" onclick="saveWalkInAndCheckIn('${roomName}')">Save & Check-In</button>
                     <button class="action-btn btn-cancel" onclick="closeModal()">Cancel</button>
                 `;
@@ -308,7 +341,6 @@
             }
         }
 
-        // Mini prompt view modal frame for routing transaction types
         function openPaymentSelectionWindow(docId, pendingAmt) {
             const modalContent = document.getElementById('modalContent');
             modalContent.innerHTML = `
@@ -336,7 +368,6 @@
 
         async function commitFinalizedCheckout(docId, selectedMode) {
             try {
-                // Clear state atomically, recording payment details on data document safely
                 await db.collection('bookings').doc(docId).update({
                     checkedIn: "Completed",
                     paymentMode: selectedMode,
@@ -363,11 +394,29 @@
         function saveWalkInAndCheckIn(roomName) {
             const name = document.getElementById('walkInName').value.trim();
             const phone = document.getElementById('walkInPhone').value.trim();
-            const total = parseFloat(document.getElementById('walkInTotal').value) || 0;
-            const advance = parseFloat(document.getElementById('walkInAdvance').value) || 0;
+            const totalInput = document.getElementById('walkInTotal').value;
+            const advanceInput = document.getElementById('walkInAdvance').value;
+            const adultsInput = document.getElementById('walkInAdults').value;
+            const kidsInput = document.getElementById('walkInKids').value;
             const checkoutDate = document.getElementById('walkInCheckoutDate').value;
 
-            if (!name || !phone || !checkoutDate) { alert("Please complete all required entries."); return; }
+            // Validations (Image 305 requirements)
+            if (!name) { alert("Guest Name is mandatory."); return; }
+            
+            const phoneRegex = /^\d{10}$/;
+            if (!phone || !phoneRegex.test(phone)) { alert("Phone Number is mandatory and must be exactly 10 digits."); return; }
+            
+            if (totalInput === "") { alert("Total Amount is mandatory."); return; }
+            const total = parseFloat(totalInput) || 0;
+            
+            if (advanceInput === "") { alert("Advance Paid is mandatory."); return; }
+            const advance = parseFloat(advanceInput) || 0;
+            
+            if (advance > total) { alert("Warning: Advance paid cannot be more than the total amount!"); return; }
+            
+            if (adultsInput === "") { alert("No. of Adult Pax is mandatory."); return; }
+            if (kidsInput === "") { alert("No. of Kid Pax is mandatory."); return; }
+            if (!checkoutDate) { alert("Checkout Target Date is mandatory."); return; }
 
             db.collection('bookings').add({
                 roomNo: roomName,
@@ -375,6 +424,8 @@
                 phone: phone,
                 total: total,
                 advance: advance,
+                adults: parseInt(adultsInput) || 0,
+                kids: parseInt(kidsInput) || 0,
                 checkin: todayStr,
                 checkout: checkoutDate,
                 checkedIn: true,

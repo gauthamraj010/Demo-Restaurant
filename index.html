@@ -208,6 +208,7 @@
         
         .empty-room-card { background: #f8fafc; border: 2px dashed #cbd5e1; padding: 12px 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; text-decoration: none; color: var(--text-main); font-weight: 700; font-size: 14px; }
         .empty-room-card:hover { background: #f1f5f9; border-color: #94a3b8; }
+        .past-empty-card { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; color: #94a3b8; font-weight: 500; font-size: 14px; }
         .plus-badge { background: #2979ff; color: white; border-radius: 6px; padding: 2px 8px; font-size: 14px; font-weight: 800; }
         
         .action-btn { margin-top: 8px; margin-right: 6px; cursor: pointer; padding: 5px 14px; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
@@ -215,7 +216,7 @@
         .view-bill-btn { background: #10b981; color: #fff; }
         .delete-btn { background: #ef5350; color: #fff; }
         
-        .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 2000; }
         .modal { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.15); width: 90%; max-width: 360px; }
         .modal input { width: 100%; margin-bottom: 10px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
         .modal-btn-row { display: flex; justify-content: flex-end; margin-top: 12px; gap: 8px; }
@@ -241,7 +242,7 @@
                 <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 Dashboard
             </a>
-            <a class="tab-item" href="addbill.html">
+            <a class="tab-item" href="#" onclick="handleProtectedNavigation('addbill.html')">
                 <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
                 New bill
             </a>
@@ -366,6 +367,22 @@
     </div>
 
     <script>
+        // REPLACE THIS ADDRESS WITH YOUR ACTUAL OWNER EMAIL TO GRANT ACCESS
+        const OWNER_EMAIL = "your_owner_email@example.com";
+
+        function isUserOwner() {
+            const user = auth.currentUser;
+            return user && user.email === OWNER_EMAIL;
+        }
+
+        function handleProtectedNavigation(targetUrl) {
+            if (!isUserOwner()) {
+                alert("Owner only access this");
+                return;
+            }
+            window.location.href = targetUrl;
+        }
+
         function showDashboardView() {
             document.getElementById('dashboardTab').classList.add('active');
             document.getElementById('dashboardView').style.display = 'flex';
@@ -377,7 +394,6 @@
             document.getElementById('dashboardView').style.display = 'none';
             document.getElementById('calendarContainer').style.display = 'block';
             
-            // Set today as selected date by default if nothing is selected yet
             if (!selectedDate) {
                 selectedDate = new Date().toLocaleDateString('sv');
             }
@@ -511,11 +527,20 @@
                                      </div>
                                 </div>`;
                         } else {
-                            listDiv.innerHTML += `
-                                <a href="new.html?room=${encodeURIComponent(roomName)}&date=${dateStr}" class="empty-room-card">
-                                    <span>Room ${roomName}</span>
-                                    <span class="plus-badge">+ Add Booking</span>
-                                </a>`;
+                            if (isPastDate) {
+                                // Clear blank design without "+ Add Booking" links for history entries
+                                listDiv.innerHTML += `
+                                    <div class="past-empty-card">
+                                        <span>Room ${roomName}</span>
+                                        <span style="font-size: 12px; font-style: italic;">No Booking Recorded</span>
+                                    </div>`;
+                            } else {
+                                listDiv.innerHTML += `
+                                    <a href="#" onclick="event.preventDefault(); handleProtectedNavigation('new.html?room=${encodeURIComponent(roomName)}&date=${dateStr}')" class="empty-room-card">
+                                        <span>Room ${roomName}</span>
+                                        <span class="plus-badge">+ Add Booking</span>
+                                    </a>`;
+                            }
                         }
                     });
                 })
@@ -585,6 +610,10 @@
         }
 
         function openEditModal(docId){
+            if (!isUserOwner()) {
+                alert("Owner only access this");
+                return;
+            }
             currentEditId = docId;
             db.collection('bookings').doc(docId).get().then(doc=>{
                 const data = doc.data();
@@ -607,42 +636,3 @@
             document.getElementById('editError').textContent = '';
             db.collection('bookings').doc(currentEditId).update({
                 name: document.getElementById('editName').value.trim(),
-                phone: document.getElementById('editPhone').value.trim(),
-                checkin: document.getElementById('editCheckin').value.trim(),
-                checkout: document.getElementById('editCheckout').value.trim(),
-                roomNo: document.getElementById('editRoomNo').value.trim(),
-                total: parseFloat(document.getElementById('editTotal').value.trim()),
-                advance: parseFloat(document.getElementById('editAdvance').value.trim())
-            }).then(() => {
-                closeEditModal();
-                if(selectedDate) showBookingsOnDate(selectedDate);
-            }).catch(e=>{ document.getElementById('editError').textContent=e.message; });
-        }
-
-        function openDeleteModal(docId){
-            currentDeleteId = docId;
-            db.collection('bookings').doc(docId).get().then(doc=>{
-                currentDeleteData = doc.data();
-                document.getElementById('deleteText').innerHTML =
-                    `<b>Name:</b> ${currentDeleteData.name}<br>
-                     <b>Room:</b> ${currentDeleteData.roomNo}<br>
-                     <b>Check-in:</b> ${currentDeleteData.checkin}<br>
-                     <b>Check-out:</b> ${currentDeleteData.checkout}<br>
-                     <b>Phone:</b> ${currentDeleteData.phone}`;
-                document.getElementById('deleteError').textContent = '';
-                document.getElementById('deleteModalBg').style.display = '';
-            });
-        }
-        function closeDeleteModal(){
-            document.getElementById('deleteModalBg').style.display='none';
-            currentDeleteId = null; currentDeleteData = null;
-        }
-        function submitDelete(){
-            db.collection('bookings').doc(currentDeleteId).delete().then(()=>{
-                closeDeleteModal();
-                if(selectedDate) showBookingsOnDate(selectedDate);
-            }).catch(e=>{ document.getElementById('deleteError').textContent=e.message; });
-        }
-    </script>
-</body>
-</html>

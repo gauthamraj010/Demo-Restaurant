@@ -126,7 +126,7 @@
         <div class="content-workspace">
             <div id="workspaceAlertBanner" class="alert-banner"></div>
 
-            <div id="loginSection" class="login-container" style="display: none;">
+            <div id="loginSection" class="login-container" style="display: flex;">
                 <h2 class="login-title">Gatekeeper Verification</h2>
                 <p class="login-subtitle">Please authenticate to manage billing updates</p>
                 
@@ -206,7 +206,8 @@
         const roomApp = firebase.initializeApp({
             apiKey: "AIzaSyCebk_0DBBu5w0cvWP0lUKqQanmiwoC42U",
             authDomain: "booking-25ba4.firebaseapp.com",
-            projectId: "booking-25ba4"
+            projectId: "booking-25ba4",
+            storageBucket: "booking-25ba4.firebasestorage.app"
         }, "roomAppInstance");
         const roomDb = firebase.firestore(roomApp);
 
@@ -238,9 +239,9 @@
             const loginSection = document.getElementById('loginSection');
             const billingWorkspace = document.getElementById('billingMainWorkspace');
             const logoutBtn = document.getElementById('logoutBtn');
+            const loadingText = document.getElementById('loadingWorkspaceText');
+            const roomSelection = document.getElementById('roomSelectionWorkspace');
             
-            hideGlobalError();
-
             if (user) {
                 // Fetch verified profile role designation matrix from user registry
                 billingDb.collection('users').doc(user.uid).get().then(profileSnap => {
@@ -249,6 +250,8 @@
                         if (role === 'owner' || role === 'staff') {
                             loginSection.style.display = 'none';
                             billingWorkspace.style.display = 'flex';
+                            roomSelection.style.display = 'grid';
+                            loadingText.style.display = 'block';
                             logoutBtn.style.display = 'block';
                             initAppWorkspace();
                             return;
@@ -264,7 +267,6 @@
                 billingWorkspace.style.display = 'none';
                 logoutBtn.style.display = 'none';
                 loginSection.style.display = 'flex';
-                document.getElementById('loadingWorkspaceText').style.display = 'block';
             }
         });
 

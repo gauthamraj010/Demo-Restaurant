@@ -226,8 +226,15 @@
             document.getElementById('alertModalBg').style.display = 'flex';
         }
 
+        // Variable to hold data context redirection url safely
+        let redirectionUrl = "index.html";
+
         function closeModal() {
             document.getElementById('alertModalBg').style.display = 'none';
+            // If the alert notice title is Success, proceed immediately to the page redirection route
+            if (document.getElementById('modalTitle').innerText === "Success") {
+                window.location.href = redirectionUrl;
+            }
         }
 
         // Point 1: Handle pre-selection of Room and Check-in parameters sent via URL parameters
@@ -244,7 +251,6 @@
             }
         });
 
-        // Point 2 & 3: Field verification logic and data synchronization layout
         function saveUpcomingBooking() {
             const name = document.getElementById('guestName').value.trim();
             const phone = document.getElementById('guestPhone').value.trim();
@@ -268,32 +274,31 @@
                 return;
             }
 
-            // Verification Rule 3: Sequential timing range checking
+            // Point 1 Fix: Sequential timing range checking - Allows same day or future dates safely
             if (checkout < checkin) {
-                showAlert("Error: Check-out target date cannot fall before your select Check-in date.", "Timeline Error");
+                showAlert("Error: Check-out target date cannot fall before your chosen Check-in date.", "Timeline Error");
                 return;
             }
 
-            // Point 3: Commit structural schema values matching room_details ledger configuration accurately
+            // Commit structural schema values matching room_details ledger configuration accurately
             db.collection('bookings').add({
-                roomNo: roomName, // Matches lookup string layout references perfectly 
+                roomNo: roomName, 
                 name: name,
                 phone: phone,
                 total: total,
                 advance: advance,
                 adults: adults,
                 kids: kids,
-                checkin: checkin,   // Preselected setup key parameter tracking
+                checkin: checkin,   
                 checkout: checkout,
-                checkedIn: "Upcoming", // Retains item parameters for active workspace view processing without instant walk-in conversion
+                checkedIn: "Upcoming", 
                 createdBy: 'owner',
                 extraBills: []
             })
             .then(() => {
+                // Point 2 Fix: Prepare target landing page parameter matching saved booking record checkin date
+                redirectionUrl = `index.html?date=${checkin}`;
                 showAlert("Booking details saved successfully to system workspace upcoming lists!", "Success");
-                setTimeout(() => {
-                    window.location.href = "index.html";
-                }, 1500);
             })
             .catch(err => {
                 showAlert("Error connecting to database ledger line: " + err.message, "System Write Failure");

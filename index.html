@@ -280,6 +280,8 @@
 </head>
 <body>
 
+    <input type="hidden" id="tempActiveClickedDate" value="">
+
     <div class="web-app-container">
         
         <header class="header">
@@ -574,6 +576,13 @@
             const total = parseFloat(document.getElementById('newTotalAmount').value) || 0;
             const advance = parseFloat(document.getElementById('newAdvanceAmount').value) || 0;
 
+            // Verification using our temporary element to check checkout date safety against the last clicked calendar date
+            const savedClickedDate = document.getElementById('tempActiveClickedDate').value;
+            if (savedClickedDate && checkout < savedClickedDate) {
+                showCustomAlert("Error: Check-out target date cannot fall before your active clicked date framework (" + savedClickedDate + ").", "Timeline Error");
+                return;
+            }
+
             if (phone.length !== 10 || isNaN(phone)) {
                 showCustomAlert("Please enter a valid 10 digit mobile number.", "Invalid Phone Input");
                 return;
@@ -665,6 +674,9 @@
             calendarYear = parseInt(parts[0]);
             calendarMonth = parseInt(parts[1]) - 1;
             selectedDate = todayStr;
+
+            // Update temporary storage when loading the current today date click view automatically
+            document.getElementById('tempActiveClickedDate').value = todayStr;
 
             renderCalendar();
             showBookingsOnDate(selectedDate);
@@ -758,6 +770,10 @@
                 el.textContent = d;
                 el.onclick = function(){
                     selectedDate = dateStr;
+                    
+                    // Save date in the temporary input storage container upon manual click trigger
+                    document.getElementById('tempActiveClickedDate').value = dateStr;
+
                     renderCalendar();
                     showBookingsOnDate(dateStr);
                 }

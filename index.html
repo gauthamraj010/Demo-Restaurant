@@ -28,7 +28,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
@@ -265,8 +265,9 @@
         .delete-btn { background: #ef5350 !important; color: #fff !important; }
         
         .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-        .modal { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.15); width: 90%; max-width: 360px; }
-        .modal input { width: 100%; margin-bottom: 10px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        .modal { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.15); width: 90%; max-width: 360px; max-height: 90vh; overflow-y: auto; }
+        .modal input, .modal select { width: 100%; margin-bottom: 10px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background: #fff; }
+        .modal label { display: block; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 3px; color: #555; }
         .modal-btn-row { display: flex; justify-content: flex-end; margin-top: 12px; gap: 8px; align-items: center; }
         .modal-btn-row button { padding: 6px 14px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-weight: 600; font-size: 13px; }
         .modal-title { margin-bottom: 16px; font-weight: bold; font-size: 18px; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 6px; }
@@ -274,6 +275,7 @@
         
         .settled-bill-box { background: #f8fafc; padding: 12px; border-radius: 8px; font-size: 13.5px; line-height: 1.6; border: 1px solid #e2e8f0; margin-bottom: 12px; }
         .bill-item-row { display: flex; justify-content: space-between; font-size: 12.5px; color: #475569; padding: 2px 0; border-bottom: 1px dashed #cbd5e1; }
+        .row-grid-modal { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     </style>
 </head>
 <body>
@@ -368,6 +370,67 @@
         </div>
     </div>
 
+    <div id="addBookingModalBg" class="modal-bg" style="display:none; z-index: 2500;">
+        <form class="modal" id="addBookingForm" onsubmit="event.preventDefault(); submitNewBooking();">
+            <div class="modal-title">New Booking</div>
+            
+            <label for="newGuestName">Guest Name</label>
+            <input type="text" id="newGuestName" required placeholder="Enter full name">
+
+            <label for="newGuestPhone">Phone Number</label>
+            <input type="tel" id="newGuestPhone" required placeholder="10-digit phone number">
+
+            <div class="row-grid-modal">
+                <div>
+                    <label for="newRoomNo">Room No</label>
+                    <select id="newRoomNo" required>
+                        <option value="A-1">A-1</option>
+                        <option value="Twin-1">Twin-1</option>
+                        <option value="Twin-2">Twin-2</option>
+                        <option value="Paddy">Paddy</option>
+                        <option value="P-1">P-1</option>
+                        <option value="P-2">P-2</option>
+                        <option value="Delux">Delux</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="newCheckinDate">Check-in Date</label>
+                    <input type="date" id="newCheckinDate" required>
+                </div>
+            </div>
+
+            <label for="newCheckoutDate">Check-out Target Date</label>
+            <input type="date" id="newCheckoutDate" required>
+
+            <div class="row-grid-modal">
+                <div>
+                    <label for="newAdults">Adults Pax</label>
+                    <input type="number" id="newAdults" min="1" value="1" required>
+                </div>
+                <div>
+                    <label for="newKids">Kids Pax</label>
+                    <input type="number" id="newKids" min="0" value="0" required>
+                </div>
+            </div>
+
+            <div class="row-grid-modal">
+                <div>
+                    <label for="newTotalAmount">Total Rent (₹)</label>
+                    <input type="number" id="newTotalAmount" min="0" required placeholder="0">
+                </div>
+                <div>
+                    <label for="newAdvanceAmount">Advance Paid (₹)</label>
+                    <input type="number" id="newAdvanceAmount" min="0" value="0" required placeholder="0">
+                </div>
+            </div>
+
+            <div class="modal-btn-row">
+                <button type="button" onclick="closeAddBookingModal()">Cancel</button>
+                <button type="submit" class="action-btn view-bill-btn" style="margin-top:0;">Save Booking</button>
+            </div>
+        </form>
+    </div>
+
     <div id="customAlertModalBg" class="modal-bg" style="display:none; z-index: 3000;">
         <div class="modal">
             <div class="modal-title" id="customAlertTitle">Alert</div>
@@ -442,11 +505,11 @@
     </div>
 
     <script>
-        // TARGET OWNER ACCOUNT MAIL SPECIFIED BY GUEST
         const OWNER_EMAIL = "demo.booking2026@gmail.com";
 
-        // Helper functions to substitute alert and confirm popups
         let confirmCallback = null;
+        let pendingRedirectDate = null; // Point 2 redirection logic variable tracker
+
         function showCustomAlert(message, title="Notice") {
             document.getElementById('customAlertTitle').innerText = title;
             document.getElementById('customAlertText').innerText = message;
@@ -454,6 +517,16 @@
         }
         function closeCustomAlert() {
             document.getElementById('customAlertModalBg').style.display = 'none';
+            // Point 2 Solution: Once the operation succeeds, automatically render the right calendar layout date view!
+            if (document.getElementById('customAlertTitle').innerText === "Success" && pendingRedirectDate) {
+                const parts = pendingRedirectDate.split('-');
+                calendarYear = parseInt(parts[0]);
+                calendarMonth = parseInt(parts[1]) - 1;
+                selectedDate = pendingRedirectDate;
+                
+                pendingRedirectDate = null;
+                showCalendarView();
+            }
         }
         function showCustomConfirm(message, callback) {
             confirmCallback = callback;
@@ -476,13 +549,108 @@
             return false;
         }
 
-        // Task 1: + Add Booking button dynamically routes payload values to new.html
+        // Point 2 Solution: Open the inline Booking form modal directly instead of shifting pages!
         function triggerAddRedirect(roomName, targetDate) {
             if (!verifyOwnerSession()) {
                 showCustomAlert("Owner only access this", "Access Denied");
                 return;
             }
-            window.location.href = `new.html?room=${encodeURIComponent(roomName)}&date=${targetDate}`;
+            document.getElementById('addBookingForm').reset();
+            document.getElementById('newRoomNo').value = roomName;
+            document.getElementById('newCheckinDate').value = targetDate;
+            document.getElementById('addBookingModalBg').style.display = 'flex';
+        }
+
+        function closeAddBookingModal() {
+            document.getElementById('addBookingModalBg').style.display = 'none';
+        }
+
+        // Point 1 & 3: Inline multi-date conflict prevention engine handler
+        function submitNewBooking() {
+            const name = document.getElementById('newGuestName').value.trim();
+            const phone = document.getElementById('newGuestPhone').value.trim();
+            const roomName = document.getElementById('newRoomNo').value;
+            const checkin = document.getElementById('newCheckinDate').value;
+            const checkout = document.getElementById('newCheckoutDate').value;
+            const adults = parseInt(document.getElementById('newAdults').value) || 0;
+            const kids = parseInt(document.getElementById('newKids').value) || 0;
+            const total = parseFloat(document.getElementById('newTotalAmount').value) || 0;
+            const advance = parseFloat(document.getElementById('newAdvanceAmount').value) || 0;
+
+            if (phone.length !== 10 || isNaN(phone)) {
+                showCustomAlert("Please enter a valid 10 digit mobile number.", "Invalid Phone Input");
+                return;
+            }
+
+            if (advance > total) {
+                showCustomAlert("Warning: Advance paid cannot be more than the total rent amount!", "Financial Error");
+                return;
+            }
+
+            // Point 1 Solution: Checkout date validation layout
+            if (checkout < checkin) {
+                showCustomAlert("Error: Check-out target date cannot fall before your chosen Check-in date.", "Timeline Error");
+                return;
+            }
+
+            closeAddBookingModal();
+            
+            // Queue redirection parameters context safely
+            pendingRedirectDate = checkin;
+
+            const start = new Date(checkin);
+            const end = new Date(checkout);
+            const promises = [];
+
+            let currentDay = new Date(start);
+
+            if (checkin === checkout) {
+                promises.push(
+                    db.collection('bookings').add({
+                        roomNo: roomName,
+                        name: name,
+                        phone: phone,
+                        total: total,
+                        advance: advance,
+                        adults: adults,
+                        kids: kids,
+                        checkin: checkin,
+                        checkout: checkout,
+                        checkedIn: "Upcoming",
+                        createdBy: 'owner',
+                        extraBills: []
+                    })
+                );
+            } else {
+                while (currentDay < end) {
+                    const formattedDateStr = currentDay.toISOString().split('T')[0];
+                    promises.push(
+                        db.collection('bookings').add({
+                            roomNo: roomName,
+                            name: name,
+                            phone: phone,
+                            total: total,
+                            advance: advance,
+                            adults: adults,
+                            kids: kids,
+                            checkin: formattedDateStr,
+                            checkout: checkout,
+                            checkedIn: "Upcoming",
+                            createdBy: 'owner',
+                            extraBills: []
+                        })
+                    );
+                    currentDay.setDate(currentDay.getDate() + 1);
+                }
+            }
+
+            Promise.all(promises)
+            .then(() => {
+                showCustomAlert("Booking saved successfully to system across all selected dates!", "Success");
+            })
+            .catch(err => {
+                showCustomAlert("Error connecting to database ledger line: " + err.message, "System Write Failure");
+            });
         }
 
         function showDashboardView() {
@@ -532,7 +700,6 @@
                 document.getElementById('loginModal').style.display = 'none';
                 showDashboardView();
                 
-                // Check mail and set role badge text dynamically
                 if (user.email === OWNER_EMAIL) {
                     roleBadge.textContent = "Owner";
                     roleBadge.className = "role-badge owner";
@@ -628,7 +795,6 @@
                             if (isSettled) {
                                 actionButtonsHTML = `<button class="action-btn view-bill-btn" onclick="openSettledBillMiniWindow('${data.id}')">View Bill</button>`;
                             } else if (isPastDate) {
-                                // Task 2 variation component fallback
                                 actionButtonsHTML = `<button class="action-btn view-bill-btn" style="background:#34495e !important;" onclick="window.location.href='pending.html'">View Runtime Details</button>`;
                             } else {
                                 actionButtonsHTML = `

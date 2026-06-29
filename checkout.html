@@ -157,6 +157,7 @@
 
         let globalStayData = null;
         let calculatedBalance = 0;
+        let targetBookingGroupId = null;
         const todayStr = new Date().toLocaleDateString('sv'); 
 
         async function loadStayDetails() {
@@ -173,6 +174,8 @@
                 
                 globalStayData = doc.data();
                 calculatedBalance = parseFloat(globalStayData.total || 0) - parseFloat(globalStayData.advance || 0);
+                // Fallback to active stay ID context if bookingGroupId field layout is empty
+                targetBookingGroupId = globalStayData.bookingGroupId ? globalStayData.bookingGroupId : stayId;
 
                 document.getElementById('roomTitle').innerText = `Room: ${globalStayData.roomNo}`;
                 document.getElementById('gName').innerText = globalStayData.name;
@@ -191,13 +194,11 @@
             }
         }
 
-        // Shared function to carry forward active room details when clicking Add/Edit Bill
         function redirectWithParams(targetPage) {
             window.location.href = `${targetPage}?room=${encodeURIComponent(roomNo)}&stayId=${stayId}`;
         }
 
         function openPaymentModal() {
-            // Reset picklist element to blank state
             document.getElementById('modalPaymentSelect').selectedIndex = 0;
             document.getElementById('paymentModalOverlay').style.display = 'flex';
         }
@@ -213,19 +214,49 @@
                 return;
             }
 
-            // Dual confirmation logic check layer
             if (!confirm(`Are you sure you want to confirm checkout settlement via ${selectedMode.toUpperCase()}?`)) return;
 
             closePaymentModal();
 
             try {
-                // 1. Finalize lifecycle status marker inside database configuration
-                await db.collection('bookings').doc(stayId).update({ checkedIn: 'Completed' });
+                // 1. Fetch all documents connected to the shared bookingGroupId
+                const groupSnap = await db.collection('bookings')
+                    .where('bookingGroupId', '==', targetBookingGroupId)
+                    .where('checkedIn', '==', true)
+                    .get();
 
-                // 2. Append balance metrics directly into transactions log ledger
+                const batch = db.batch();
+                let roomsCheckedOut = [];
+
+                if (!groupSnap.empty) {
+                    // Update status layout settings across the discovered block sequence
+                    groupSnap.forEach(doc => {
+                        batch.update(doc.ref, { checkedIn: 'Completed' });
+                        let data = doc.data();
+                        if(data.roomNo) {
+                            if(Array.isArray(data.roomNo)) {
+                                roomsCheckedOut.push(...data.roomNo);
+                            } else {
+                                roomsCheckedOut.push(data.roomNo);
+                            }
+                        }
+                    });
+                } else {
+                    // Direct doc configuration update fallback routine 
+                    const fallbackRef = db.collection('bookings').doc(stayId);
+                    batch.update(fallbackRef, { checkedIn: 'Completed' });
+                    roomsCheckedOut.push(globalStayData.roomNo);
+                }
+
+                // 2. Clear status configurations changes inside transaction batch routine
+                await batch.commit();
+
+                // 3. Append summary record entries to ledger
+                const cleanRoomsDisplayStr = [...new Set(roomsCheckedOut)].join(', ');
                 await db.collection('transactions').add({
                     bookingId: stayId,
-                    roomNo: globalStayData.roomNo,
+                    bookingGroupId: targetBookingGroupId,
+                    roomNo: cleanRoomsDisplayStr,
                     guestName: globalStayData.name,
                     date: todayStr,
                     type: "Settle",
@@ -234,10 +265,10 @@
                     recordedBy: "owner"
                 });
 
-                // 3. Document text receipt summary generator
+                // 4. Generate structured text details layout for communication shares
                 const receiptMessage = `*VINTAGE GARDEN RESORT*\n` +
                                        `-----------------------------\n` +
-                                       `*Room No:* ${globalStayData.roomNo}\n` +
+                                       `*Room(s):* ${cleanRoomsDisplayStr}\n` +
                                        `*Guest:* ${globalStayData.name}\n` +
                                        `*Check-In:* ${globalStayData.checkin}\n` +
                                        `*Check-Out:* ${todayStr}\n` +
@@ -249,7 +280,6 @@
                                        `Status: *Paid & Settled* ✅\n\n` +
                                        `Thank you for staying with us! ✨`;
 
-                // 4. Trigger share screen action
                 if (navigator.share) {
                     try {
                         await navigator.share({ title: 'Resort Receipt Summary', text: receiptMessage });

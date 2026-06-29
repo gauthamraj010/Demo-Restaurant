@@ -221,7 +221,7 @@
         let idToName = {};
         let singleItemPayload = {};
 
-        // Realtime State Observer for Access Management running via unified config
+        // Simplified State Observer: Allows access if authenticated to project dashboard
         auth.onAuthStateChanged(user => {
             const loginSection = document.getElementById('loginSection');
             const billingWorkspace = document.getElementById('billingMainWorkspace');
@@ -230,26 +230,12 @@
             const roomSelection = document.getElementById('roomSelectionWorkspace');
             
             if (user) {
-                // Fetch verified profile role designation matrix from user registry inside single DB
-                roomDb.collection('users').doc(user.uid).get().then(profileSnap => {
-                    if (profileSnap.exists) {
-                        const role = profileSnap.data().role;
-                        if (role === 'owner' || role === 'staff') {
-                            loginSection.style.display = 'none';
-                            billingWorkspace.style.display = 'flex';
-                            roomSelection.style.display = 'grid';
-                            loadingText.style.display = 'block';
-                            logoutBtn.style.display = 'block';
-                            initAppWorkspace();
-                            return;
-                        }
-                    }
-                    displayGlobalError("Operational access denied. Role validation failure.");
-                    auth.signOut();
-                }).catch(err => {
-                    displayGlobalError("Profile verification failure: " + err.message);
-                    auth.signOut();
-                });
+                loginSection.style.display = 'none';
+                billingWorkspace.style.display = 'flex';
+                roomSelection.style.display = 'grid';
+                loadingText.style.display = 'block';
+                logoutBtn.style.display = 'block';
+                initAppWorkspace();
             } else {
                 billingWorkspace.style.display = 'none';
                 logoutBtn.style.display = 'none';
@@ -309,7 +295,6 @@
 
         async function checkSingleRoomStatus(roomName) {
             try {
-                // Modified lookup logic checking both String matching and Array-contains formats
                 let activeSnap = await roomDb.collection('bookings')
                                          .where('roomNo', '==', roomName)
                                          .where('checkedIn', '==', true).get();
@@ -359,7 +344,6 @@
 
         async function fetchFoodMenuItems() {
             try {
-                // Pulled menu directly from the single consolidated database
                 let menuSnap = await roomDb.collection('menuItems').get();
                 let menuItems = [];
                 menuSnap.forEach(doc => menuItems.push({ id: doc.id, ...doc.data() }));

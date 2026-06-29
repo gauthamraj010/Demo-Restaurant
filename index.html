@@ -580,7 +580,6 @@
         function submitNewBooking() {
             const name = document.getElementById('newGuestName').value.trim();
             const phone = document.getElementById('newGuestPhone').value.trim();
-            // Since the select field is disabled, read value directly via DOM state
             const roomName = document.getElementById('newRoomNo').value;
             const checkin = document.getElementById('newCheckinDate').value;
             const checkout = document.getElementById('newCheckoutDate').value;
@@ -613,6 +612,9 @@
             const promises = [];
 
             let currentDay = new Date(start);
+            
+            // Generate a unique identifier to trace every single day created for this exact transaction stay
+            const bookingGroupId = "GRP_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7);
 
             if (checkin === checkout) {
                 promises.push(
@@ -627,6 +629,8 @@
                         checkin: checkin,
                         checkout: checkout,
                         checkedIn: "Upcoming",
+                        stayBack: false,
+                        bookingGroupId: bookingGroupId,
                         createdBy: 'owner',
                         extraBills: []
                     })
@@ -634,6 +638,12 @@
             } else {
                 while (currentDay < end) {
                     const formattedDateStr = currentDay.toISOString().split('T')[0];
+                    
+                    // Look ahead logic to mark if this document stays back into a following target date block
+                    let nextDay = new Date(currentDay);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    const isStayingBack = nextDay < end;
+
                     promises.push(
                         db.collection('bookings').add({
                             roomNo: roomName,
@@ -646,6 +656,8 @@
                             checkin: formattedDateStr,
                             checkout: checkout,
                             checkedIn: "Upcoming",
+                            stayBack: isStayingBack,
+                            bookingGroupId: bookingGroupId,
                             createdBy: 'owner',
                             extraBills: []
                         })
@@ -674,7 +686,6 @@
             document.getElementById('dashboardView').style.display = 'none';
             document.getElementById('calendarContainer').style.display = 'block';
             
-            // Forces the calendar to always open to the present layout date view
             const todayStr = new Date().toLocaleDateString('sv'); 
             const parts = todayStr.split('-');
             calendarYear = parseInt(parts[0]);
@@ -979,11 +990,34 @@
             document.getElementById('deleteModalBg').style.display='none';
             currentDeleteId = null; currentDeleteData = null;
         }
+        
         function submitDelete(){
-            db.collection('bookings').doc(currentDeleteId).delete().then(()=>{
-                closeDeleteModal();
-                if(selectedDate) showBookingsOnDate(selectedDate);
-            }).catch(e=>{ document.getElementById('deleteError').textContent=e.message; });
+            document.getElementById('deleteError').textContent = '';
+            
+            // Check if the target booking contains a group link ID to target multi-day batches
+            if (currentDeleteData && currentDeleteData.bookingGroupId) {
+                db.collection('bookings')
+                    .where('bookingGroupId', '==', currentDeleteData.bookingGroupId)
+                    .get()
+                    .then(snapshot => {
+                        const batch = db.batch();
+                        snapshot.forEach(doc => {
+                            batch.delete(doc.ref);
+                        });
+                        return batch.commit();
+                    })
+                    .then(() => {
+                        closeDeleteModal();
+                        if(selectedDate) showBookingsOnDate(selectedDate);
+                    })
+                    .catch(e => { document.getElementById('deleteError').textContent = e.message; });
+            } else {
+                // Standalone standard fallback delete
+                db.collection('bookings').doc(currentDeleteId).delete().then(()=>{
+                    closeDeleteModal();
+                    if(selectedDate) showBookingsOnDate(selectedDate);
+                }).catch(e=>{ document.getElementById('deleteError').textContent=e.message; });
+            }
         }
     </script>
 </body>

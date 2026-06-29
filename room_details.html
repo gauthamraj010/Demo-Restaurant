@@ -237,15 +237,8 @@
             try {
                 let activeSnap = await db.collection('bookings')
                                          .where('checkedIn', '==', true)
-                                         .where('roomNo', 'in', [roomName, [roomName]])
+                                         .where('roomNo', '==', roomName)
                                          .get();
-
-                if (activeSnap.empty) {
-                    activeSnap = await db.collection('bookings')
-                                           .where('checkedIn', '==', true)
-                                           .where('roomNo', 'array-contains', roomName)
-                                           .get();
-                }
 
                 if (!activeSnap.empty) {
                     let stayData = activeSnap.docs[0].data();
@@ -261,15 +254,8 @@
 
                 let reservedSnap = await db.collection('bookings')
                                            .where('checkin', '==', todayStr)
-                                           .where('roomNo', 'in', [roomName, [roomName]])
+                                           .where('roomNo', '==', roomName)
                                            .get();
-
-                if (reservedSnap.empty) {
-                    reservedSnap = await db.collection('bookings')
-                                             .where('checkin', '==', todayStr)
-                                             .where('roomNo', 'array-contains', roomName)
-                                             .get();
-                }
 
                 let freshReservation = reservedSnap.docs.find(d => d.data().checkedIn !== 'Completed' && d.data().checkedIn !== true);
 
@@ -347,14 +333,7 @@
                 let advancePaid = parseFloat(room.data.advance) || 0;
                 let finalPendingBalance = (baseRoomRent - advancePaid) + additionalChargesTotal;
 
-                let currentRoomsListHTML = "";
-                if (Array.isArray(room.data.roomNo)) {
-                    room.data.roomNo.forEach(r => {
-                        currentRoomsListHTML += `<span class="room-tag">${r}</span>`;
-                    });
-                } else {
-                    currentRoomsListHTML = `<span class="room-tag">${roomName}</span>`;
-                }
+                let currentRoomsListHTML = `<span class="room-tag">${roomName}</span>`;
 
                 modalContent.innerHTML = `
                     <div class="modal-title">Operational Hub (${roomName})</div>
@@ -362,7 +341,7 @@
                     <div class="guest-details-box">
                         <b>Guest Name:</b> ${room.data.name}<br>
                         <b>Phone:</b> ${room.data.phone}<br>
-                        <div style="margin: 4px 0;"><b>Linked Rooms:</b><div class="group-pill-box">${currentRoomsListHTML}</div></div>
+                        <div style="margin: 4px 0;"><b>Linked Room:</b><div class="group-pill-box">${currentRoomsListHTML}</div></div>
                         <b>Stay Span:</b> ${room.data.checkin} › ${room.data.checkout}<br>
                         <b>Pax Total:</b> Adults: ${room.data.adults || 0} | Kids: ${room.data.kids || 0}<br>
                         <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
@@ -472,7 +451,7 @@
                 <div class="modal-title">Room Merging Engine</div>
                 <div id="modalWarningBanner" class="modal-warning-banner"></div>
                 <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px; line-height:1.4; font-weight:600;">
-                    Select an empty room to merge it into this booking. They will instantly share the same balance sheet, food orders, and check out automatically together.
+                    Select an empty room to merge it into this booking. They will share the same bookingGroupId structure to track billing.
                 </p>
 
                 <div style="max-height: 220px; overflow-y:auto; margin-bottom:14px;">
@@ -489,20 +468,28 @@
                 const snapshot = await docRef.get();
                 if(!snapshot.exists) return;
 
-                let currentRoomsData = snapshot.data().roomNo;
-                let finalRoomsArray = [];
-
-                if (Array.isArray(currentRoomsData)) {
-                    finalRoomsArray = [...currentRoomsData];
-                } else if (currentRoomsData) {
-                    finalRoomsArray.push(currentRoomsData);
+                const parentData = snapshot.data();
+                
+                // Track or assign standard bookingGroupId
+                let sharedGroupId = parentData.bookingGroupId;
+                if (!sharedGroupId) {
+                    sharedGroupId = targetDocId; 
+                    await docRef.update({ bookingGroupId: sharedGroupId });
                 }
 
-                if (!finalRoomsArray.includes(roomToAppend)) {
-                    finalRoomsArray.push(roomToAppend);
-                }
+                // Construct an isolated document profile for the new merged target room
+                const newRoomProfile = {
+                    ...parentData,
+                    roomNo: roomToAppend,
+                    bookingGroupId: sharedGroupId
+                };
 
-                await docRef.update({ roomNo: finalRoomsArray });
+                // Clean up obsolete fields if present
+                if ('merged' in newRoomProfile) delete newRoomProfile.merged;
+
+                // Create a completely new document for the target destination room 
+                await db.collection('bookings').add(newRoomProfile);
+                
                 closeModal();
                 preloadRoomsLayout();
             } catch (err) {
@@ -570,7 +557,6 @@
             }).catch(err => showModalWarning("Error updating check-in: " + err));
         }
 
-        // Helper function to generate an array of string dates from start up to end date (exclusive of checkout day)
         function generateDatesInRange(startDateStr, endDateStr) {
             const dates = [];
             let current = new Date(startDateStr);
@@ -618,9 +604,8 @@
                 return; 
             }
 
-            // Generate an array of dates the guest is staying for, to create a document per day
             const activeDates = generateDatesInRange(todayStr, checkoutDate);
-            const bookingGroupId = db.collection('bookings').doc().id; // shared unique identifier
+            const bookingGroupId = db.collection('bookings').doc().id; 
             const batch = db.batch();
 
             activeDates.forEach(date => {
@@ -628,7 +613,7 @@
                 batch.set(docRef, {
                     name: name,
                     roomNo: roomName,
-                    checkin: date,       // Set each single day as checkin date so index.html filtering displays it perfectly
+                    checkin: date,       
                     checkout: checkoutDate,
                     phone: phone,
                     total: total,
@@ -639,8 +624,7 @@
                     createdBy: 'staff',
                     extraBills: [],
                     bookingGroupId: bookingGroupId,
-                    stayback: (activeDates.length > 1), // Marked true if staying multiple nights
-                    merged: false
+                    stayback: (activeDates.length > 1)
                 });
             });
 

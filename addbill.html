@@ -83,8 +83,8 @@
         .form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
         .form-input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; font-weight: 600; background: #fff; }
 
-        /* Auth Verification Styles */
-        .login-container { padding: 10px 0; display: flex; flex-direction: column; justify-content: center; }
+        /* Auth Verification Styles - Changed default display to none to eliminate page flicker */
+        .login-container { padding: 10px 0; display: none; flex-direction: column; justify-content: center; }
         .login-title { font-size: 18px; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; text-align: center; margin-top: 10px; }
         .login-subtitle { font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 20px; font-weight: 500; }
     </style>
@@ -126,7 +126,7 @@
         <div class="content-workspace">
             <div id="workspaceAlertBanner" class="alert-banner"></div>
 
-            <div id="loginSection" class="login-container" style="display: flex;">
+            <div id="loginSection" class="login-container">
                 <h2 class="login-title">Gatekeeper Verification</h2>
                 <p class="login-subtitle">Please authenticate to manage billing updates</p>
                 
@@ -214,6 +214,7 @@
 
         let selectedRoomNo = null;
         let selectedStayId = null;
+        let selectedBookingGroupId = null; // Storing active group ID mapping context
         let selectedBillingType = null;
 
         let prices = {};
@@ -221,7 +222,7 @@
         let idToName = {};
         let singleItemPayload = {};
 
-        // Simplified State Observer: Allows access if authenticated to project dashboard
+        // Simplified State Observer: Displays login panel only if authentication context fails
         auth.onAuthStateChanged(user => {
             const loginSection = document.getElementById('loginSection');
             const billingWorkspace = document.getElementById('billingMainWorkspace');
@@ -404,6 +405,8 @@
 
             selectedRoomNo = roomName;
             selectedStayId = room.docId;
+            // Capture bookingGroupId falls back to the docId context if the field is missing
+            selectedBookingGroupId = (room.data && room.data.bookingGroupId) ? room.data.bookingGroupId : room.docId;
 
             document.getElementById('splitModalTitle').innerText = `${roomName} Options`;
             document.getElementById('workflowSplitModal').style.display = 'flex';
@@ -524,15 +527,33 @@
 
         async function writeBillRecordToDatabase() {
             try {
-                const bookingRef = roomDb.collection('bookings').doc(selectedStayId);
-                
-                await bookingRef.update({
-                    extraBills: firebase.firestore.FieldValue.arrayUnion(singleItemPayload)
-                });
+                // Querying all active documents sharing the same target bookingGroupId
+                const matchingBookingsSnap = await roomDb.collection('bookings')
+                    .where('bookingGroupId', '==', selectedBookingGroupId)
+                    .where('checkedIn', '==', true)
+                    .get();
 
+                const batch = roomDb.batch();
+
+                if (!matchingBookingsSnap.empty) {
+                    // Injecting items to all matching documents found inside group
+                    matchingBookingsSnap.forEach(doc => {
+                        batch.update(doc.ref, {
+                            extraBills: firebase.firestore.FieldValue.arrayUnion(singleItemPayload)
+                        });
+                    });
+                } else {
+                    // Fallback block if bookingGroupId isn't present across documents yet
+                    const fallbackRef = roomDb.collection('bookings').doc(selectedStayId);
+                    batch.update(fallbackRef, {
+                        extraBills: firebase.firestore.FieldValue.arrayUnion(singleItemPayload)
+                    });
+                }
+
+                await batch.commit();
                 window.location.href = 'index.html';
             } catch (err) {
-                displayGlobalError("Database Error: " + err.message);
+                displayGlobalError("Database Write Error: " + err.message);
             }
         }
 

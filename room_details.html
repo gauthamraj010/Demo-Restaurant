@@ -502,7 +502,11 @@
                     finalRoomsArray.push(roomToAppend);
                 }
 
-                await docRef.update({ roomNo: finalRoomsArray });
+                // When a room is merged, update merge flag to true so addbill.html knows to duplicate across this grouping layout
+                await docRef.update({ 
+                    roomNo: finalRoomsArray,
+                    merge: true 
+                });
                 closeModal();
                 preloadRoomsLayout();
             } catch (err) {
@@ -603,6 +607,9 @@
                 return; 
             }
 
+            // Generate bookingGroupId using a random string format compatible with index.html structures
+            const generatedGroupId = "GRP-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+
             db.collection('bookings').add({
                 roomNo: [roomName],
                 name: name,
@@ -613,7 +620,9 @@
                 kids: parseInt(kidsInput) || 0,
                 checkin: todayStr,
                 checkout: checkoutDate,
-                checkedIn: true,
+                checkedIn: true,         // Explicit boolean true
+                merge: false,            // Defaults to false for single walk-in registration
+                bookingGroupId: generatedGroupId, // Shared schema ID field mapping
                 createdBy: 'staff',
                 extraBills: []
             }).then(() => {

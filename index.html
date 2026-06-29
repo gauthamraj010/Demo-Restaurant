@@ -300,9 +300,9 @@
                 <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
                 New bill
             </a>
-            <a class="tab-item" href="room_details.html">
+            <a class="tab-item" href="pending.html">
                 <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                View bill
+                Pending Orders
             </a>
             <a class="tab-item">
                 <svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
@@ -476,6 +476,7 @@
             return false;
         }
 
+        // Task 1: + Add Booking button dynamically routes payload values to new.html
         function triggerAddRedirect(roomName, targetDate) {
             if (!verifyOwnerSession()) {
                 showCustomAlert("Owner only access this", "Access Denied");
@@ -627,7 +628,8 @@
                             if (isSettled) {
                                 actionButtonsHTML = `<button class="action-btn view-bill-btn" onclick="openSettledBillMiniWindow('${data.id}')">View Bill</button>`;
                             } else if (isPastDate) {
-                                actionButtonsHTML = `<button class="action-btn view-bill-btn" style="background:#34495e !important;" onclick="window.location.href='room_details.html'">View Runtime Details</button>`;
+                                // Task 2 variation component fallback
+                                actionButtonsHTML = `<button class="action-btn view-bill-btn" style="background:#34495e !important;" onclick="window.location.href='pending.html'">View Runtime Details</button>`;
                             } else {
                                 actionButtonsHTML = `
                                     <button class="action-btn edit-btn" onclick="openEditModal('${data.id}')">Edit</button>

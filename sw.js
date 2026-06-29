@@ -1,4 +1,4 @@
-// Basic service worker to enable PWA installation capabilities
+// Background pipeline enabling application install compliance
 self.addEventListener('fetch', function(event) {
-    // You can leave this blank or use it to cache your app files later
+    // Left empty intentionally to pass browser install criteria
 });

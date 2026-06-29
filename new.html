@@ -218,9 +218,10 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Global context to handle dynamic custom link navigation
-        let postActionRedirectUrl = "index.html";
+        // Track saved date context for Point 2 dynamic redirect
+        let targetCheckinDate = "";
 
+        // Custom alert display helpers
         function showAlert(message, title = "Validation Warning") {
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalText').innerText = message;
@@ -229,13 +230,13 @@
 
         function closeModal() {
             document.getElementById('alertModalBg').style.display = 'none';
-            // Point 2 Solution: Run dynamic redirection immediately when pressing the modal confirmation key
+            // Point 2: If booking was successful, immediately redirect to index.html with the selected date parameter
             if (document.getElementById('modalTitle').innerText === "Success") {
-                window.location.href = postActionRedirectUrl;
+                window.location.href = "index.html?date=" + targetCheckinDate;
             }
         }
 
-        // Point 1: Capture parameters sent via link search string queries
+        // Handle pre-selection of Room and Check-in parameters sent via URL parameters
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const roomParam = urlParams.get('room');
@@ -260,81 +261,81 @@
             const total = parseFloat(document.getElementById('totalAmount').value) || 0;
             const advance = parseFloat(document.getElementById('advanceAmount').value) || 0;
 
-            // Validation Checking: 10 Digit Phone matching
+            // Validation Rule 1: 10 Digit Phone checking
             if (phone.length !== 10 || isNaN(phone)) {
                 showAlert("Please enter a valid 10 digit mobile number.", "Invalid Phone Input");
                 return;
             }
 
-            // Validation Checking: Advance capping vs Total bounds
+            // Validation Rule 2: Advance vs Total cap evaluation 
             if (advance > total) {
                 showAlert("Warning: Advance paid cannot be more than the total rent amount!", "Financial Rule Error");
                 return;
             }
 
-            // Point 1 Solution: Verifies check-out is either identical to or past check-in cleanly
+            // Point 1 Fix: Explicit timing evaluation logic (Checkout must be same or greater than checkin)
             if (checkout < checkin) {
-                showAlert("Error: Check-out target date cannot fall before your select Check-in date.", "Timeline Error");
+                showAlert("Error: Check-out target date cannot be less than the selected Check-in date.", "Timeline Error");
                 return;
             }
 
-            // Point 3 Solution: Loop execution to populate intermediate dates safely and prevent blind booking slots
+            // Save the current date context globally for accurate post-success redirection routing
+            targetCheckinDate = checkin;
+
+            // Point 3 Logic: Multi-night loop database entry creation
             const start = new Date(checkin);
             const end = new Date(checkout);
-            const batchRequests = [];
-            
-            // Loop day-by-day up to checkout day to lock all intermediate blocked dates
+            const promises = [];
+
             let currentDay = new Date(start);
-            
-            // Handle edge case where checkin and checkout are the exact same day
+
             if (checkin === checkout) {
-                batchRequests.push({
-                    roomNo: [roomName],
-                    name: name,
-                    phone: phone,
-                    total: total,
-                    advance: advance,
-                    adults: adults,
-                    kids: kids,
-                    checkin: checkin,
-                    checkout: checkout,
-                    checkedIn: "Upcoming",
-                    createdBy: 'owner',
-                    extraBills: []
-                });
-            } else {
-                // Multi-night sequential layout processing
-                while (currentDay < end) {
-                    const formattedDateStr = currentDay.toISOString().split('T')[0];
-                    
-                    batchRequests.push({
-                        roomNo: [roomName],
+                // Same-day check-in/check-out slot entry allocation
+                promises.push(
+                    db.collection('bookings').add({
+                        roomNo: roomName,
                         name: name,
                         phone: phone,
                         total: total,
                         advance: advance,
                         adults: adults,
                         kids: kids,
-                        checkin: formattedDateStr, // Stores booking instance record directly under this active timeline index date
+                        checkin: checkin,
                         checkout: checkout,
                         checkedIn: "Upcoming",
                         createdBy: 'owner',
                         extraBills: []
-                    });
+                    })
+                );
+            } else {
+                // Multi-night continuous sequential slot filling
+                while (currentDay < end) {
+                    const formattedDateStr = currentDay.toISOString().split('T')[0];
                     
-                    // Proceed to next evening interval block sequentially
+                    promises.push(
+                        db.collection('bookings').add({
+                            roomNo: roomName,
+                            name: name,
+                            phone: phone,
+                            total: total,
+                            advance: advance,
+                            adults: adults,
+                            kids: kids,
+                            checkin: formattedDateStr, 
+                            checkout: checkout,
+                            checkedIn: "Upcoming", 
+                            createdBy: 'owner',
+                            extraBills: []
+                        })
+                    );
                     currentDay.setDate(currentDay.getDate() + 1);
                 }
             }
 
-            // Fire sequential writes into firestore collection
-            const writePromises = batchRequests.map(payload => db.collection('bookings').add(payload));
-
-            Promise.all(writePromises)
+            // Commit all promises safely to Firebase Firestore
+            Promise.all(promises)
             .then(() => {
-                // Point 2 Solution: Set redirection URL dynamically to track back to the explicit target check-in window
-                postActionRedirectUrl = `index.html?date=${checkin}`;
-                showAlert("Booking details saved successfully to system workspace upcoming lists across all dates!", "Success");
+                showAlert("Booking details saved successfully to system workspace upcoming lists!", "Success");
             })
             .catch(err => {
                 showAlert("Error connecting to database ledger line: " + err.message, "System Write Failure");

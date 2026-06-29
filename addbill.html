@@ -201,7 +201,7 @@
         let roomsState = {};
 
         // -------------------------------------------------------------
-        // CS1: Room Bookings Database (booking-25ba4)
+        // UNIFIED DATABASE: Room Bookings, Menu & Users (booking-25ba4)
         // -------------------------------------------------------------
         const roomApp = firebase.initializeApp({
             apiKey: "AIzaSyCebk_0DBBu5w0cvWP0lUKqQanmiwoC42U",
@@ -210,20 +210,7 @@
             storageBucket: "booking-25ba4.firebasestorage.app"
         }, "roomAppInstance");
         const roomDb = firebase.firestore(roomApp);
-
-        // -------------------------------------------------------------
-        // CS2: Food Menu & Staff Access Database (wild-sapiens-station)
-        // -------------------------------------------------------------
-        const billingApp = firebase.initializeApp({
-            apiKey: "AIzaSyBNXgwgzr579prCiMl72QFa8qCIw7ZwihI",
-            authDomain: "wild-sapiens-station.firebaseapp.com",
-            projectId: "wild-sapiens-station",
-            storageBucket: "wild-sapiens-station.firebasestorage.app",
-            messagingSenderId: "758377996842",
-            appId: "1:758377996842:web:aa8a45807902a94ebf9953"
-        }, "billingAppInstance");
-        const billingDb = firebase.firestore(billingApp);
-        const auth = firebase.auth(billingApp);
+        const auth = firebase.auth(roomApp);
 
         let selectedRoomNo = null;
         let selectedStayId = null;
@@ -234,7 +221,7 @@
         let idToName = {};
         let singleItemPayload = {};
 
-        // Realtime State Observer for Access Management
+        // Realtime State Observer for Access Management running via unified config
         auth.onAuthStateChanged(user => {
             const loginSection = document.getElementById('loginSection');
             const billingWorkspace = document.getElementById('billingMainWorkspace');
@@ -243,8 +230,8 @@
             const roomSelection = document.getElementById('roomSelectionWorkspace');
             
             if (user) {
-                // Fetch verified profile role designation matrix from user registry
-                billingDb.collection('users').doc(user.uid).get().then(profileSnap => {
+                // Fetch verified profile role designation matrix from user registry inside single DB
+                roomDb.collection('users').doc(user.uid).get().then(profileSnap => {
                     if (profileSnap.exists) {
                         const role = profileSnap.data().role;
                         if (role === 'owner' || role === 'staff') {
@@ -322,9 +309,16 @@
 
         async function checkSingleRoomStatus(roomName) {
             try {
+                // Modified lookup logic checking both String matching and Array-contains formats
                 let activeSnap = await roomDb.collection('bookings')
                                          .where('roomNo', '==', roomName)
                                          .where('checkedIn', '==', true).get();
+
+                if (activeSnap.empty) {
+                    activeSnap = await roomDb.collection('bookings')
+                                         .where('roomNo', 'array-contains', roomName)
+                                         .where('checkedIn', '==', true).get();
+                }
 
                 if (!activeSnap.empty) {
                     let stayData = activeSnap.docs[0].data();
@@ -343,6 +337,13 @@
                                            .where('checkin', '==', todayStr)
                                            .get();
 
+                if (reservedSnap.empty) {
+                    reservedSnap = await roomDb.collection('bookings')
+                                           .where('roomNo', 'array-contains', roomName)
+                                           .where('checkin', '==', todayStr)
+                                           .get();
+                }
+
                 let freshReservation = reservedSnap.docs.find(d => d.data().checkedIn !== 'Completed' && d.data().checkedIn !== true);
 
                 if (freshReservation) {
@@ -358,12 +359,13 @@
 
         async function fetchFoodMenuItems() {
             try {
-                let menuSnap = await billingDb.collection('menuItems').get();
+                // Pulled menu directly from the single consolidated database
+                let menuSnap = await roomDb.collection('menuItems').get();
                 let menuItems = [];
                 menuSnap.forEach(doc => menuItems.push({ id: doc.id, ...doc.data() }));
                 buildFoodMenuLayout(menuItems);
             } catch(err) {
-                console.error("Menu items read error bypassed: ", err);
+                console.error("Menu items read error layout mismatch: ", err);
             }
         }
 

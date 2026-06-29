@@ -3,254 +3,301 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upcoming Booking - Demo Resort</title>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <title>Add Booking - Demo Resort</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    
     <style>
         :root {
             --bg-color: #f4f5f7;
             --card-bg: #ffffff;
             --text-main: #111827;
+            --text-muted: #6b7280;
             --border-color: #e5e7eb;
             --primary-blue: #2563eb;
-            --success-green: #10b981;
-            --text-muted: #6b7280;
+            --error-red: #ef4444;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: start; min-height: 100vh; padding: 20px; }
-        
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
         .web-app-container {
-            width: 100%; max-width: 480px; background: #fff; min-height: 85vh;
-            border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            display: flex; flex-direction: column; overflow: hidden; position: relative;
+            width: 100%;
+            max-width: 480px;
+            background: #fcfcfd;
+            min-height: 85vh;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            padding: 20px;
         }
-        
-        .header { padding: 20px 20px 10px 20px; display: flex; align-items: center; background: #fff; justify-content: space-between; }
-        .logo-badge { background-color: #0f172a; color: white; font-weight: 800; padding: 6px 10px; border-radius: 6px; font-size: 14px; margin-right: 12px; }
-        .app-title { font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #000; }
 
-        .nav-tabs { display: flex; background: #fff; border-bottom: 2px solid var(--border-color); }
-        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px 0; font-size: 11px; font-weight: 600; color: var(--text-muted); text-decoration: none; cursor: pointer; text-align: center; }
-        .tab-item.active { color: var(--primary-blue); border-bottom: 3px solid var(--primary-blue); background: #f8fafc; }
-        .tab-item svg { width: 22px; height: 22px; margin-bottom: 4px; fill: none; stroke: currentColor; stroke-width: 2; }
+        .header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
 
-        .content-workspace { padding: 24px; flex-grow: 1; display: flex; flex-direction: column; }
-        .page-heading { font-size: 16px; font-weight: 800; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 0.3px; color: #000; }
-        
-        .alert-banner { display: none; background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; font-size: 13px; font-weight: 700; padding: 12px; border-radius: 8px; margin-bottom: 18px; text-align: center; line-height: 1.4; }
+        .app-title {
+            font-size: 20px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #000;
+        }
 
-        .form-group { margin-bottom: 16px; }
-        .form-row { display: flex; gap: 12px; margin-bottom: 16px; }
-        .form-row .form-group { flex: 1; margin-bottom: 0; }
-        
-        .form-group label { display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.3px; }
-        .form-group label span { color: #ef4444; margin-left: 2px; }
-        .form-input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; font-weight: 600; background: #fff; color: var(--text-main); outline: none; }
-        .form-input:focus { border-color: var(--primary-blue); }
+        .back-btn {
+            text-decoration: none;
+            color: var(--primary-blue);
+            font-weight: 700;
+            font-size: 14px;
+        }
 
-        .action-btn { width: 100%; padding: 14px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; margin-top: 10px; }
-        .btn-save { background-color: var(--primary-blue); color: white; }
-        .btn-cancel { background-color: #e5e7eb; color: var(--text-main); margin-top: 12px; text-decoration: none; display: inline-block; }
+        .form-group {
+            margin-bottom: 16px;
+        }
 
-        /* Notification Modal Styling */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
-        .modal-box { background: white; width: 100%; max-width: 360px; border-radius: 16px; padding: 24px; box-shadow: 0 20px 25px rgba(0,0,0,0.15); text-align: center; }
-        .modal-icon { width: 48px; height: 48px; background: #e6f4ea; color: var(--success-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; font-size: 24px; font-weight: bold; }
-        .modal-title { font-size: 16px; font-weight: 800; margin-bottom: 20px; color: var(--text-main); }
-        .btn-modal-done { width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; font-size: 14px; text-transform: uppercase; background: var(--success-green); color: white; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            color: var(--text-main);
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            background: #fff;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary-blue);
+        }
+
+        .row-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: #000;
+            color: #fff;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            background: var(--primary-blue);
+        }
+
+        /* Custom Modal System */
+        .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .modal { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.15); width: 90%; max-width: 360px; }
+        .modal-title { margin-bottom: 12px; font-weight: bold; font-size: 18px; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 6px; }
+        .modal-btn { background: var(--primary-blue); color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; float: right; }
     </style>
 </head>
 <body>
 
     <div class="web-app-container">
-        <header class="header">
-            <div class="header-left" style="display:flex; align-items:center;">
-                <div class="logo-badge">DR</div>
-                <h1 class="app-title">Demo Resort</h1>
-            </div>
-        </header>
-
-        <nav class="nav-tabs">
-            <div class="tab-item" onclick="window.location.href='index.html'">
-                <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                Dashboard
-            </div>
-            <div class="tab-item" onclick="window.location.href='addbill.html'">
-                <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
-                Add bill
-            </div>
-            <div class="tab-item" onclick="window.location.href='pendingorder.html'">
-                <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                Pending Orders
-            </div>
-            <div class="tab-item">
-                <svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                Account
-            </div>
-        </nav>
-
-        <div class="content-workspace">
-            <h2 class="page-heading">Upcoming Booking</h2>
-            
-            <div id="errorBanner" class="alert-banner"></div>
-
-            <div class="form-group">
-                <label>Guest Name<span>*</span></label>
-                <input type="text" id="guestName" class="form-input" placeholder="Enter guest full name">
-            </div>
-
-            <div class="form-group">
-                <label>Phone Number<span>*</span></label>
-                <input type="tel" id="phoneNumber" class="form-input" placeholder="10-digit mobile number" maxlength="10">
-            </div>
-
-            <div class="form-group">
-                <label>Total Amount<span>*</span></label>
-                <input type="number" id="totalAmount" class="form-input" placeholder="₹ Total base charges">
-            </div>
-
-            <div class="form-group">
-                <label>Advance Paid<span>*</span></label>
-                <input type="number" id="advancePaid" class="form-input" placeholder="₹ Paid advance amount">
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>No. of Pax (Adults)<span>*</span></label>
-                    <input type="number" id="paxAdults" class="form-input" value="0" min="1">
-                </div>
-                <div class="form-group">
-                    <label>No. of Pax (Kids)<span>*</span></label>
-                    <input type="number" id="paxKids" class="form-input" value="0" min="0">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Check-In Date<span>*</span></label>
-                <input type="date" id="checkInDate" class="form-input" onchange="synchronizeDateConstraints()">
-            </div>
-
-            <div class="form-group">
-                <label>Check-Out Target Date<span>*</span></label>
-                <input type="date" id="checkOutDate" class="form-input">
-            </div>
-
-            <button class="action-btn btn-save" onclick="processUpcomingBookingRegistration()">Save</button>
-            <button class="action-btn btn-cancel" onclick="window.location.href='index.html'">Cancel</button>
+        <div class="header-row">
+            <h1 class="app-title">New Booking</h1>
+            <a href="index.html" class="back-btn">← Dashboard</a>
         </div>
 
-        <div class="modal-overlay" id="successNotificationWindow">
-            <div class="modal-box">
-                <div class="modal-icon">✓</div>
-                <h3 class="modal-title">New booking added</h3>
-                <button class="btn-modal-done" onclick="routeToUpcomingBookingsOverview()">Done</button>
+        <form id="bookingForm" onsubmit="event.preventDefault(); saveUpcomingBooking();">
+            <div class="form-group">
+                <label for="guestName">Guest Name</label>
+                <input type="text" id="guestName" required placeholder="Enter guest full name">
             </div>
+
+            <div class="form-group">
+                <label for="guestPhone">Phone Number</label>
+                <input type="tel" id="guestPhone" required placeholder="Enter 10-digit phone number">
+            </div>
+
+            <div class="row-grid">
+                <div class="form-group">
+                    <label for="roomNo">Room No</label>
+                    <select id="roomNo" required>
+                        <option value="A-1">A-1</option>
+                        <option value="Twin-1">Twin-1</option>
+                        <option value="Twin-2">Twin-2</option>
+                        <option value="Paddy">Paddy</option>
+                        <option value="P-1">P-1</option>
+                        <option value="P-2">P-2</option>
+                        <option value="Delux">Delux</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="checkinDate">Check-in Date</label>
+                    <input type="date" id="checkinDate" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="checkoutDate">Check-out Target Date</label>
+                <input type="date" id="checkoutDate" required>
+            </div>
+
+            <div class="row-grid">
+                <div class="form-group">
+                    <label for="adults">Adults Pax</label>
+                    <input type="number" id="adults" min="1" value="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="kids">Kids Pax</label>
+                    <input type="number" id="kids" min="0" value="0" required>
+                </div>
+            </div>
+
+            <div class="row-grid">
+                <div class="form-group">
+                    <label for="totalAmount">Total Rent (₹)</label>
+                    <input type="number" id="totalAmount" min="0" required placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label for="advanceAmount">Advance Paid (₹)</label>
+                    <input type="number" id="advanceAmount" min="0" value="0" required placeholder="0">
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">Save Booking</button>
+        </form>
+    </div>
+
+    <div id="alertModalBg" class="modal-bg" style="display:none;">
+        <div class="modal">
+            <div class="modal-title" id="modalTitle">Notice</div>
+            <div id="modalText" style="font-size:14px; line-height:1.5; margin-bottom:15px; color: var(--text-main);"></div>
+            <button class="modal-btn" onclick="closeModal()">OK</button>
         </div>
     </div>
 
     <script>
-        // -------------------------------------------------------------
-        // CS1: Cloud Firestore Registry Configuration
-        // -------------------------------------------------------------
-        const projectApp = firebase.initializeApp({
+        // Initialize Firebase Connection details matching project criteria
+        const firebaseConfig = {
             apiKey: "AIzaSyCebk_0DBBu5w0cvWP0lUKqQanmiwoC42U",
             authDomain: "booking-25ba4.firebaseapp.com",
-            projectId: "booking-25ba4"
-        }, "bookingSystemInstance");
-        const db = firebase.firestore(projectApp);
+            projectId: "booking-25ba4",
+            storageBucket: "booking-25ba4.firebasestorage.app",
+            messagingSenderId: "924758316703",
+            appId: "1:924758316703:web:6cee8188781143ae1774aa"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-        // Enforce calendar limits on initialization
+        // Custom alert display helpers
+        function showAlert(message, title = "Validation Warning") {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalText').innerText = message;
+            document.getElementById('alertModalBg').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('alertModalBg').style.display = 'none';
+        }
+
+        // Point 1: Handle pre-selection of Room and Check-in parameters sent via URL parameters
         window.addEventListener('DOMContentLoaded', () => {
-            const todayStr = new Date().toLocaleDateString('sv'); // Outputs ISO YYYY-MM-DD local variant
-            const checkInInput = document.getElementById('checkInDate');
-            const checkOutInput = document.getElementById('checkOutDate');
-            
-            checkInInput.min = todayStr;
-            checkOutInput.min = todayStr;
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomParam = urlParams.get('room');
+            const dateParam = urlParams.get('date');
+
+            if (roomParam) {
+                document.getElementById('roomNo').value = roomParam;
+            }
+            if (dateParam) {
+                document.getElementById('checkinDate').value = dateParam;
+            }
         });
 
-        function synchronizeDateConstraints() {
-            const checkInVal = document.getElementById('checkInDate').value;
-            const checkOutInput = document.getElementById('checkOutDate');
-            
-            if (checkInVal) {
-                // Instantly update checking boundaries dynamically based on choices
-                checkOutInput.min = checkInVal;
-                if (checkOutInput.value && checkOutInput.value <= checkInVal) {
-                    checkOutInput.value = "";
-                }
-            }
-        }
-
-        async function processUpcomingBookingRegistration() {
-            hideFormValidationError();
-
+        // Point 2 & 3: Field verification logic and data synchronization layout
+        function saveUpcomingBooking() {
             const name = document.getElementById('guestName').value.trim();
-            const phone = document.getElementById('phoneNumber').value.trim();
-            const totalAmount = parseFloat(document.getElementById('totalAmount').value);
-            const advancePaid = parseFloat(document.getElementById('advancePaid').value);
-            const adults = parseInt(document.getElementById('paxAdults').value) || 0;
-            const kids = parseInt(document.getElementById('paxKids').value) || 0;
-            const checkIn = document.getElementById('checkInDate').value;
-            const checkOut = document.getElementById('checkOutDate').value;
+            const phone = document.getElementById('guestPhone').value.trim();
+            const roomName = document.getElementById('roomNo').value;
+            const checkin = document.getElementById('checkinDate').value;
+            const checkout = document.getElementById('checkoutDate').value;
+            const adults = parseInt(document.getElementById('adults').value) || 0;
+            const kids = parseInt(document.getElementById('kids').value) || 0;
+            const total = parseFloat(document.getElementById('totalAmount').value) || 0;
+            const advance = parseFloat(document.getElementById('advanceAmount').value) || 0;
 
-            // Rigorous field assertions
-            if (!name || !phone || isNaN(totalAmount) || isNaN(advancePaid) || !checkIn || !checkOut) {
-                showFormValidationError("Please enter data into all fields marked with an asterisk (*).");
-                return;
-            }
-
+            // Validation Rule 1: 10 Digit Phone checking
             if (phone.length !== 10 || isNaN(phone)) {
-                showFormValidationError("Please enter a valid 10-digit mobile number.");
+                showAlert("Please enter a valid 10 digit mobile number.", "Invalid Phone Input");
                 return;
             }
 
-            if (adults < 1) {
-                showFormValidationError("At least 1 adult guest is required to create a valid booking.");
+            // Validation Rule 2: Advance vs Total cap evaluation 
+            if (advance > total) {
+                showAlert("Warning: Advance paid cannot be more than the total rent amount!", "Financial Rule Error");
                 return;
             }
 
-            if (checkOut <= checkIn) {
-                showFormValidationError("The Check-Out target date must fall after the selected Check-In date.");
+            // Verification Rule 3: Sequential timing range checking
+            if (checkout < checkin) {
+                showAlert("Error: Check-out target date cannot fall before your select Check-in date.", "Timeline Error");
                 return;
             }
 
-            try {
-                // Populate schema record matched to structural criteria
-                await db.collection('bookings').add({
-                    name: name,
-                    phone: phone,
-                    totalAmount: totalAmount,
-                    advancePaid: advancePaid,
-                    pax: `Adults: ${adults} | Kids: ${kids}`,
-                    checkin: checkIn,
-                    checkout: checkOut,
-                    checkedIn: false, // Explicitly marked false as an upcoming booking
-                    extraBills: [],
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                // Display custom confirmation modal interface frame
-                document.getElementById('successNotificationWindow').style.display = 'flex';
-            } catch (err) {
-                showFormValidationError("Database update aborted: " + err.message);
-            }
-        }
-
-        function showFormValidationError(msg) {
-            const banner = document.getElementById('errorBanner');
-            banner.innerText = msg;
-            banner.style.display = 'block';
-            document.querySelector('.web-app-container').scrollTop = 0;
-        }
-
-        function hideFormValidationError() {
-            document.getElementById('errorBanner').style.display = 'none';
-        }
-
-        function routeToUpcomingBookingsOverview() {
-            // Seamlessly returns back to your dashboard flow control list state
-            window.location.href = 'index.html';
+            // Point 3: Commit structural schema values matching room_details ledger configuration accurately
+            db.collection('bookings').add({
+                roomNo: roomName, // Matches lookup string layout references perfectly 
+                name: name,
+                phone: phone,
+                total: total,
+                advance: advance,
+                adults: adults,
+                kids: kids,
+                checkin: checkin,   // Preselected setup key parameter tracking
+                checkout: checkout,
+                checkedIn: "Upcoming", // Retains item parameters for active workspace view processing without instant walk-in conversion
+                createdBy: 'owner',
+                extraBills: []
+            })
+            .then(() => {
+                showAlert("Booking details saved successfully to system workspace upcoming lists!", "Success");
+                setTimeout(() => {
+                    window.location.href = "index.html";
+                }, 1500);
+            })
+            .catch(err => {
+                showAlert("Error connecting to database ledger line: " + err.message, "System Write Failure");
+            });
         }
     </script>
 </body>

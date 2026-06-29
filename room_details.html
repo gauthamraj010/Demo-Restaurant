@@ -502,11 +502,7 @@
                     finalRoomsArray.push(roomToAppend);
                 }
 
-                // When a room is merged, update merge flag to true so addbill.html knows to duplicate across this grouping layout
-                await docRef.update({ 
-                    roomNo: finalRoomsArray,
-                    merge: true 
-                });
+                await docRef.update({ roomNo: finalRoomsArray });
                 closeModal();
                 preloadRoomsLayout();
             } catch (err) {
@@ -574,6 +570,21 @@
             }).catch(err => showModalWarning("Error updating check-in: " + err));
         }
 
+        // Helper function to generate an array of string dates from start up to end date (exclusive of checkout day)
+        function generateDatesInRange(startDateStr, endDateStr) {
+            const dates = [];
+            let current = new Date(startDateStr);
+            const end = new Date(endDateStr);
+            while (current < end) {
+                dates.push(current.toISOString().split('T')[0]);
+                current.setDate(current.getDate() + 1);
+            }
+            if (dates.length === 0) {
+                dates.push(startDateStr);
+            }
+            return dates;
+        }
+
         function saveWalkInAndCheckIn(roomName) {
             document.getElementById('modalWarningBanner').style.display = 'none';
 
@@ -607,28 +618,36 @@
                 return; 
             }
 
-            // Generate bookingGroupId using a random string format compatible with index.html structures
-            const generatedGroupId = "GRP-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+            // Generate an array of dates the guest is staying for, to create a document per day
+            const activeDates = generateDatesInRange(todayStr, checkoutDate);
+            const bookingGroupId = db.collection('bookings').doc().id; // shared unique identifier
+            const batch = db.batch();
 
-            db.collection('bookings').add({
-                roomNo: [roomName],
-                name: name,
-                phone: phone,
-                total: total,
-                advance: advance,
-                adults: parseInt(adultsInput) || 0,
-                kids: parseInt(kidsInput) || 0,
-                checkin: todayStr,
-                checkout: checkoutDate,
-                checkedIn: true,         // Explicit boolean true
-                merge: false,            // Defaults to false for single walk-in registration
-                bookingGroupId: generatedGroupId, // Shared schema ID field mapping
-                createdBy: 'staff',
-                extraBills: []
-            }).then(() => {
+            activeDates.forEach(date => {
+                const docRef = db.collection('bookings').doc();
+                batch.set(docRef, {
+                    name: name,
+                    roomNo: roomName,
+                    checkin: date,       // Set each single day as checkin date so index.html filtering displays it perfectly
+                    checkout: checkoutDate,
+                    phone: phone,
+                    total: total,
+                    advance: advance,
+                    adults: parseInt(adultsInput) || 0,
+                    kids: parseInt(kidsInput) || 0,
+                    checkedIn: true,
+                    createdBy: 'staff',
+                    extraBills: [],
+                    bookingGroupId: bookingGroupId,
+                    stayback: (activeDates.length > 1), // Marked true if staying multiple nights
+                    merged: false
+                });
+            });
+
+            batch.commit().then(() => {
                 closeModal();
                 preloadRoomsLayout();
-            }).catch(err => showModalWarning("Error saving walk-in: " + err));
+            }).catch(err => showModalWarning("Error saving multi-day walk-in sequence: " + err));
         }
 
         function closeModal() { document.getElementById('roomModalBg').style.display = 'none'; }

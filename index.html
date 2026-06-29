@@ -276,6 +276,14 @@
         .settled-bill-box { background: #f8fafc; padding: 12px; border-radius: 8px; font-size: 13.5px; line-height: 1.6; border: 1px solid #e2e8f0; margin-bottom: 12px; }
         .bill-item-row { display: flex; justify-content: space-between; font-size: 12.5px; color: #475569; padding: 2px 0; border-bottom: 1px dashed #cbd5e1; }
         .row-grid-modal { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+        /* Style adjustments for locked visible input fields */
+        .modal input[readonly], .modal select[disabled] {
+            background-color: #f1f5f9;
+            color: #475569;
+            border-color: #cbd5e1;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -383,7 +391,7 @@
             <div class="row-grid-modal">
                 <div>
                     <label for="newRoomNo">Room No</label>
-                    <select id="newRoomNo" required>
+                    <select id="newRoomNo" required disabled>
                         <option value="A-1">A-1</option>
                         <option value="Twin-1">Twin-1</option>
                         <option value="Twin-2">Twin-2</option>
@@ -395,7 +403,7 @@
                 </div>
                 <div>
                     <label for="newCheckinDate">Check-in Date</label>
-                    <input type="date" id="newCheckinDate" required>
+                    <input type="date" id="newCheckinDate" required readonly>
                 </div>
             </div>
 
@@ -557,7 +565,7 @@
             document.getElementById('newRoomNo').value = roomName;
             document.getElementById('newCheckinDate').value = targetDate;
             
-            // FIX: Pre-select check-out date to match the checked-in target selection, and lock everything before it
+            // Pre-select check-out date to match the checked-in target selection, and lock everything before it
             const checkoutField = document.getElementById('newCheckoutDate');
             checkoutField.value = targetDate;
             checkoutField.min = targetDate;
@@ -572,6 +580,7 @@
         function submitNewBooking() {
             const name = document.getElementById('newGuestName').value.trim();
             const phone = document.getElementById('newGuestPhone').value.trim();
+            // Since the select field is disabled, read value directly via DOM state
             const roomName = document.getElementById('newRoomNo').value;
             const checkin = document.getElementById('newCheckinDate').value;
             const checkout = document.getElementById('newCheckoutDate').value;

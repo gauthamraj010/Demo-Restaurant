@@ -477,18 +477,31 @@
                     await docRef.update({ bookingGroupId: sharedGroupId });
                 }
 
-                // Construct an isolated document profile for the new merged target room
-                const newRoomProfile = {
-                    ...parentData,
-                    roomNo: roomToAppend,
-                    bookingGroupId: sharedGroupId
-                };
+                // QUERY ALL SYSTEM DOCUMENTS LINKED WITH THIS BOOKING GROUP ID
+                const groupSnap = await db.collection('bookings')
+                                          .where('bookingGroupId', '==', sharedGroupId)
+                                          .get();
 
-                // Clean up obsolete fields if present
-                if ('merged' in newRoomProfile) delete newRoomProfile.merged;
+                const batch = db.batch();
 
-                // Create a completely new document for the target destination room 
-                await db.collection('bookings').add(newRoomProfile);
+                // Clone every individual date document mapping to the new target room
+                groupSnap.forEach(doc => {
+                    const currentDocData = doc.data();
+                    
+                    const newRoomProfile = {
+                        ...currentDocData,
+                        roomNo: roomToAppend,
+                        bookingGroupId: sharedGroupId
+                    };
+
+                    if ('merged' in newRoomProfile) delete newRoomProfile.merged;
+
+                    const newDocRef = db.collection('bookings').doc();
+                    batch.set(newDocRef, newRoomProfile);
+                });
+
+                // Write all generated records in a clean batch transaction
+                await batch.commit();
                 
                 closeModal();
                 preloadRoomsLayout();

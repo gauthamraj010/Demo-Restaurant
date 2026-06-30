@@ -791,84 +791,135 @@
             }
         }
 
-        function showBookingsOnDate(dateStr) {
+        async function showBookingsOnDate(dateStr) {
             const todayStr = new Date().toLocaleDateString('sv');
             const isPastDate = dateStr < todayStr;
 
-            db.collection('bookings')
-                .where('checkin', '==', dateStr)
-                .get()
-                .then(snapshot => {
-                    const listDiv = document.getElementById('bookings-list');
-                    listDiv.innerHTML = '';
-                    
-                    let roomBookingsMap = {};
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        if (data.roomNo) {
-                            roomBookingsMap[data.roomNo] = { id: doc.id, ...data };
-                        }
-                    });
+            try {
+                const snapshot = await db.collection('bookings').where('checkin', '==', dateStr).get();
+                const listDiv = document.getElementById('bookings-list');
+                listDiv.innerHTML = '';
+                
+                let roomBookingsMap = {};
+                let bookingGroupIdsArray = [];
 
-                    customRoomsList.forEach(roomName => {
-                        if (roomBookingsMap[roomName]) {
-                            const data = roomBookingsMap[roomName];
-                            const isSettled = data.checkedIn === "Completed";
-                            
-                            let actionButtonsHTML = "";
-                            
-                            if (isSettled) {
-                                actionButtonsHTML = `<button class="action-btn view-bill-btn" onclick="openSettledBillMiniWindow('${data.id}')">View Bill</button>`;
-                            } else if (isPastDate) {
-                                actionButtonsHTML = `<button class="action-btn view-bill-btn" style="background:#34495e !important;" onclick="window.location.href='pending.html'">View Runtime Details</button>`;
-                            } else {
-                                actionButtonsHTML = `
-                                    <button class="action-btn edit-btn" onclick="openEditModal('${data.id}')">Edit</button>
-                                    <button class="action-btn delete-btn" onclick="openDeleteModal('${data.id}')">Delete</button>
-                                `;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.roomNo) {
+                        roomBookingsMap[data.roomNo] = { id: doc.id, ...data };
+                    }
+                    if (data.bookingGroupId) {
+                        bookingGroupIdsArray.push(data.bookingGroupId);
+                    }
+                });
+
+                // Fetch all related bookings for group evaluation cross references
+                let groupCollectionMap = {};
+                let uniqueGroupIds = [...new Set(bookingGroupIdsArray)];
+
+                if (uniqueGroupIds.length > 0) {
+                    const groupSnapshot = await db.collection('bookings').where('bookingGroupId', 'in', uniqueGroupIds).get();
+                    groupSnapshot.forEach(gDoc => {
+                        const gData = gDoc.data();
+                        const id = gDoc.id;
+                        if (!groupCollectionMap[gData.bookingGroupId]) {
+                            groupCollectionMap[gData.bookingGroupId] = [];
+                        }
+                        groupCollectionMap[gData.bookingGroupId].push({ id, ...gData });
+                    });
+                }
+
+                customRoomsList.forEach(roomName => {
+                    if (roomBookingsMap[roomName]) {
+                        const data = roomBookingsMap[roomName];
+                        
+                        // Condition rule logic update: check if checkedIn is complete OR true
+                        const isSettled = data.checkedIn === "Completed" || data.checkedIn === true;
+                        
+                        let displayRoomLabelText = roomName;
+                        let dynamicDayCountMarkup = "";
+
+                        // Evaluate group metadata cross matching checks
+                        if (data.bookingGroupId && groupCollectionMap[data.bookingGroupId]) {
+                            let groupMatches = groupCollectionMap[data.bookingGroupId];
+
+                            // 1. Same checkin date but different rooms (Multi-room group booking badge)
+                            let siblingRooms = groupMatches
+                                .filter(item => item.checkin === data.checkin && item.roomNo !== data.roomNo)
+                                .map(item => item.roomNo);
+
+                            if (siblingRooms.length > 0) {
+                                let mergedRoomTags = [...new Set(siblingRooms)];
+                                displayRoomLabelText = `${data.roomNo}+${mergedRoomTags.join('+')}`;
                             }
 
+                            // 2. Different checkin dates with same room (Multi-day stay calculation)
+                            let matchingRoomTimeline = groupMatches
+                                .filter(item => item.roomNo === data.roomNo)
+                                .sort((a, b) => new Date(a.checkin) - new Date(b.checkin));
+
+                            if (matchingRoomTimeline.length > 1) {
+                                let totalSpanDays = matchingRoomTimeline.length;
+                                let dayIndexPosition = matchingRoomTimeline.findIndex(item => item.id === data.id) + 1;
+                                if (dayIndexPosition > 0) {
+                                    dynamicDayCountMarkup = `<span style="color:#2563eb; font-weight: 800; font-size: 13px; margin-left: 6px;">Day ${dayIndexPosition} (${totalSpanDays})</span>`;
+                                }
+                            }
+                        }
+
+                        let actionButtonsHTML = "";
+                        
+                        if (isSettled) {
+                            actionButtonsHTML = `<button class="action-btn view-bill-btn" onclick="openSettledBillMiniWindow('${data.id}')">View Bill</button>`;
+                        } else if (isPastDate) {
+                            actionButtonsHTML = `<button class="action-btn view-bill-btn" style="background:#34495e !important;" onclick="window.location.href='pending.html'">View Runtime Details</button>`;
+                        } else {
+                            actionButtonsHTML = `
+                                <button class="action-btn edit-btn" onclick="openEditModal('${data.id}')">Edit</button>
+                                <button class="action-btn delete-btn" onclick="openDeleteModal('${data.id}')">Delete</button>
+                            `;
+                        }
+
+                        listDiv.innerHTML += `
+                            <div class="booking-card" style="${isSettled ? 'background:#f0fdf4; border-color:#bbf7d0;' : ''}">
+                                 <div style="font-size:15px; font-weight:800; color:#1e293b; margin-bottom:4px; text-transform:uppercase; display:flex; justify-content:space-between;">
+                                     <span>Room: ${displayRoomLabelText} ${dynamicDayCountMarkup}</span>
+                                     ${isSettled ? `<span style="color:#166534; font-size:11px; background:#dcfce7; padding:2px 8px; border-radius:12px;">✅ ${data.checkedIn === 'Completed' ? 'SETTLED' : 'ARRIVED'}</span>` : ''}
+                                 </div>
+                                 <b>Guest Name:</b> ${data.name}<br>
+                                 <b>Check-in:</b> ${data.checkin}<br>
+                                 <b>Check-out:</b> ${data.checkout}<br>
+                                 <b>Total Rent:</b> ₹${data.total}<br>
+                                 <b>Advance Paid:</b> ₹${data.advance}<br>
+                                 <b>Phone:</b> ${data.phone}<br>
+                                 <span style="font-size:11px; font-weight:700; color:#475569; background:#cbd5e1; padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px;">
+                                     Created By: ${data.createdBy || 'owner'}
+                                 </span>
+                                 <div>
+                                     ${actionButtonsHTML}
+                                 </div>
+                            </div>`;
+                    } else {
+                        if (isPastDate) {
                             listDiv.innerHTML += `
-                                <div class="booking-card" style="${isSettled ? 'background:#f0fdf4; border-color:#bbf7d0;' : ''}">
-                                     <div style="font-size:15px; font-weight:800; color:#1e293b; margin-bottom:4px; text-transform:uppercase; display:flex; justify-content:space-between;">
-                                         <span>Room: ${roomName}</span>
-                                         ${isSettled ? '<span style="color:#166534; font-size:11px; background:#dcfce7; padding:2px 8px; border-radius:12px;">✅ SETTLED</span>' : ''}
-                                     </div>
-                                     <b>Guest Name:</b> ${data.name}<br>
-                                     <b>Check-in:</b> ${data.checkin}<br>
-                                     <b>Check-out:</b> ${data.checkout}<br>
-                                     <b>Total Rent:</b> ₹${data.total}<br>
-                                     <b>Advance Paid:</b> ₹${data.advance}<br>
-                                     <b>Phone:</b> ${data.phone}<br>
-                                     <span style="font-size:11px; font-weight:700; color:#475569; background:#cbd5e1; padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px;">
-                                         Created By: ${data.createdBy || 'owner'}
-                                     </span>
-                                     <div>
-                                         ${actionButtonsHTML}
-                                     </div>
+                                <div class="past-empty-card">
+                                    <span>Room ${roomName}</span>
+                                    <span style="font-size: 12px; font-style: italic; color:#94a3b8;">No Booking Recorded</span>
                                 </div>`;
                         } else {
-                            if (isPastDate) {
-                                listDiv.innerHTML += `
-                                    <div class="past-empty-card">
-                                        <span>Room ${roomName}</span>
-                                        <span style="font-size: 12px; font-style: italic; color:#94a3b8;">No Booking Recorded</span>
-                                    </div>`;
-                            } else {
-                                listDiv.innerHTML += `
-                                    <a href="#" onclick="event.preventDefault(); triggerAddRedirect('${roomName}', '${dateStr}')" class="empty-room-card">
-                                        <span>Room ${roomName}</span>
-                                        <span class="plus-badge">+ Add Booking</span>
-                                    </a>`;
-                            }
+                            listDiv.innerHTML += `
+                                <a href="#" onclick="event.preventDefault(); triggerAddRedirect('${roomName}', '${dateStr}')" class="empty-room-card">
+                                    <span>Room ${roomName}</span>
+                                    <span class="plus-badge">+ Add Booking</span>
+                                </a>`;
                         }
-                    });
-                })
-                .catch(err => {
-                    console.error(err);
-                    document.getElementById('bookings-list').innerHTML =
-                        `<div style="color:red;text-align:center;margin:17px 0;">Error loading workspace data.</div>`;
+                    }
                 });
+            } catch (err) {
+                console.error(err);
+                document.getElementById('bookings-list').innerHTML =
+                    `<div style="color:red;text-align:center;margin:17px 0;">Error loading workspace data.</div>`;
+            }
         }
 
         function openSettledBillMiniWindow(docId) {
@@ -896,6 +947,10 @@
                 let baseRoomRent = parseFloat(data.total) || 0;
                 let advancePaid = parseFloat(data.advance) || 0;
                 
+                // Rule update computation layout
+                let totalBill = baseRoomRent + additionalChargesTotal;
+                let pendingBalance = totalBill - advancePaid;
+                
                 let billWindowHTML = `
                     <b>Guest Name:</b> ${data.name}<br>
                     <b>Phone:</b> ${data.phone}<br>
@@ -911,12 +966,16 @@
                     ` : ''}
                     
                     <hr style="margin: 8px 0; border:0; border-top: 1px solid #eee;">
-                    <div style="font-size:14px; font-weight:800; color:#166534; display:flex; justify-content:space-between;">
-                        <span>Final Balance Owed:</span>
-                        <span>₹0 (Paid & Closed)</span>
+                    <div style="font-size:14px; font-weight:800; color:#1e293b; display:flex; justify-content:space-between; margin-bottom: 4px;">
+                        <span>Total Bill:</span>
+                        <span>₹${totalBill}</span>
                     </div>
-                    <div style="margin-top:4px; font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase;">
-                        💳 Mode: ${data.paymentMode || 'Settled'}
+                    <div style="font-size:14px; font-weight:800; color:#2563eb; display:flex; justify-content:space-between;">
+                        <span>Pending:</span>
+                        <span>₹${pendingBalance}</span>
+                    </div>
+                    <div style="margin-top:8px; font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase;">
+                        💳 Status Logged: ${data.checkedIn === 'Completed' ? 'Settled & Closed' : 'Arrived / Active Stay'}
                     </div>
                 `;
                 

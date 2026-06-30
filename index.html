@@ -850,7 +850,7 @@
 
                             if (siblingRooms.length > 0) {
                                 let mergedRoomTags = [...new Set(siblingRooms)];
-                                displayRoomLabelText = `${data.roomNo} , ${mergedRoomTags.join(',')}`;
+                                displayRoomLabelText = `${data.roomNo} , (${mergedRoomTags.join(',')})`;
                             }
 
                             // 2. Different checkin dates with same room (Multi-day stay calculation)

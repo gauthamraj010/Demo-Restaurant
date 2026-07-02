@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hotel Booking Admin Login</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f6fa; margin: 0; }
+    .container { width:100%; max-width:370px; margin:40px auto; padding:18px 10px; background:#fff; border-radius:14px; box-shadow:0 3px 12px #eee; position: relative; }
+    #home-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: -26px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #222;
+      border: none;
+      border-radius: 100px;
+      width: 56px;
+      height: 56px;
+      box-shadow: 0 2px 7px #999;
+      cursor: pointer;
+      z-index: 10;
+      outline: none;
+      transition: background 0.15s;
+    }
+    #home-btn:hover { background: #000; }
+    #home-btn svg {
+      width: 26px; height: 26px; fill: #fff;
+    }
+    input, select, button:not(#home-btn) { display:block; width:100%; margin-bottom:18px; padding:12px 10px; font-size:16px; border-radius:7px; border:1px solid #ddd; }
+    button:not(#home-btn) { background:#2e86de; color:#fff; font-weight:bold; letter-spacing:1px; }
+    .error { color: red; }
+    .success { color: green; }
+    .hidden { display:none; }
+    @media (max-width:420px) {
+      #home-btn { width:40px;height:40px;top:-18px;}
+      #home-btn svg { width:20px;height:20px;}
+    }
+  </style>
+</head>
+<body>
+  <div id="login-container" class="container">
+    <button id="home-btn" onclick="window.location.href='https://menucard-fc3a39.gitlab.io/'">
+      <svg viewBox="0 0 24 24">
+        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path>
+      </svg>
+    </button>
+    <h2>Admin Login</h2>
+    <div id="login-msg"></div>
+    <input type="email" id="login-email" placeholder="Email" required>
+    <input type="password" id="login-password" placeholder="Password" required>
+    <button onclick="login()">Login</button>
+  </div>
+  <div id="booking-container" class="container hidden">
+    <button id="home-btn" onclick="window.location.href='https://menucard-fc3a39.gitlab.io/'">
+      <svg viewBox="0 0 24 24">
+        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path>
+      </svg>
+    </button>
+    <h2>New Booking</h2>
+    <div id="msg"></div>
+    <input type="text" id="name" placeholder="Name" required>
+    <input type="tel" id="phone" placeholder="Phone Number" pattern="[0-9]*" inputmode="numeric" required>
+    <input type="date" id="checkin" required>
+    <input type="date" id="checkout" required>
+    <select id="roomNo" required>
+      <option value="">Select Room</option>
+    </select>
+    <input type="number" id="total" placeholder="Total Amount" required>
+    <input type="number" id="advance" placeholder="Advance Amount" required>
+    <button onclick="saveBooking()">Save Booking</button>
+    <button onclick="logout()" style="background:#aaa;">Logout</button>
+  </div>
+  <script>
+    // Firebase config YOURS
+    const firebaseConfig = {
+      apiKey: "AIzaSyCebk_0DBBu5w0cvWP0lUKqQanmiwoC42U",
+      authDomain: "booking-25ba4.firebaseapp.com",
+      projectId: "booking-25ba4",
+      storageBucket: "booking-25ba4.firebasestorage.app",
+      messagingSenderId: "924758316703",
+      appId: "1:924758316703:web:6cee8188781143ae1774aa"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // Auth logic using Firebase Authentication
+    function login() {
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+      const loginMsg = document.getElementById('login-msg');
+      loginMsg.innerHTML = '';
+      if (!email || !password) {
+        loginMsg.innerHTML = "<span class='error'>Please enter email and password.</span>";
+        return;
+      }
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          document.getElementById('login-container').classList.add('hidden');
+          document.getElementById('booking-container').classList.remove('hidden');
+          loadRooms();
+        })
+        .catch(err => {
+          loginMsg.innerHTML = "<span class='error'>Invalid email or password.</span>";
+        });
+    }
+
+    function logout() {
+      auth.signOut().then(() => {
+        document.getElementById('booking-container').classList.add('hidden');
+        document.getElementById('login-container').classList.remove('hidden');
+        document.getElementById('login-email').value = '';
+        document.getElementById('login-password').value = '';
+        document.getElementById('msg').innerHTML = '';
+      });
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById('login-container').classList.add('hidden');
+        document.getElementById('booking-container').classList.remove('hidden');
+        loadRooms();
+      } else {
+        document.getElementById('booking-container').classList.add('hidden');
+        document.getElementById('login-container').classList.remove('hidden');
+      }
+    });
+
+    function loadRooms() {
+      const sel = document.getElementById('roomNo');
+      sel.innerHTML = '<option value="">Select Room</option>';
+      db.collection('rooms').get().then(snapshot => {
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.roomNo) {
+            sel.innerHTML += `<option value="${data.roomNo}">${data.roomNo}</option>`;
+          }
+        });
+      });
+    }
+
+    function showMsg(message, type) {
+      document.getElementById('msg').innerHTML = `<span class='${type}'>${message}</span>`;
+    }
+
+    function saveBooking() {
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const checkin = document.getElementById('checkin').value;
+      const checkout = document.getElementById('checkout').value;
+      const roomNo = document.getElementById('roomNo').value.trim();
+      const total = parseInt(document.getElementById('total').value, 10);
+      const advance = parseInt(document.getElementById('advance').value, 10);
+
+      if(!name || !phone || !checkin || !checkout || !roomNo || isNaN(total) || isNaN(advance)) {
+        showMsg("Please fill all fields.", "error");
+        return;
+      }
+      if (checkout <= checkin) {
+        showMsg("Check-out date must be after check-in date.", "error");
+        return;
+      }
+      db.collection('bookings')
+        .where('roomNo', '==', roomNo)
+        .get()
+        .then(snapshot => {
+            let conflict = false;
+            snapshot.forEach(doc => {
+              const b = doc.data();
+              if (b.checkin && b.checkout && 
+                  b.checkin < checkout && b.checkout > checkin) {
+                conflict = true;
+              }
+            });
+            if (conflict) {
+              showMsg("A booking already exists for this room and date range.", "error");
+              return;
+            }
+            return db.collection('bookings').add({
+              name, phone, checkin, checkout, roomNo, total, advance,
+              created: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+              showMsg("Booking saved successfully!", "success");
+              document.getElementById('name').value = "";
+              document.getElementById('phone').value = "";
+              document.getElementById('checkin').value = "";
+              document.getElementById('checkout').value = "";
+              document.getElementById('roomNo').value = "";
+              document.getElementById('total').value = "";
+              document.getElementById('advance').value = "";
+              loadRooms();
+            });
+        })
+        .catch(err => {
+          showMsg("Error: " + err.message, "error");
+        });
+    }
+  </script>
+</body>
+</html>
